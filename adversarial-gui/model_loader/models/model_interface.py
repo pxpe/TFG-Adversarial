@@ -1,0 +1,23 @@
+# Autor: José Luis López Ruiz
+# Fecha: 08/05/2024
+# Descripción: Este script define la Interfaz común para todos los modelos del Model Loader.
+
+from model_loader.model_utils.model_predictions import ModelPrediction
+from typing import List
+
+class ModelInterface():
+    def __init__(self) -> None:
+        pass
+
+    def get_name(self) -> str:
+        pass
+
+    def predict(self, image_path: str) -> List[ModelPrediction]:
+        pass
+
+class CustomModelInterface(ModelInterface):
+    def __init__(self, model_path: str) -> None:
+        pass
+    
+    def predict(self, image_path: str) -> List[ModelPrediction]:
+        pass

@@ -7,6 +7,6 @@ from gui import AversarialGUI
 from model_loader.loader import ModelLoader
 
 if __name__ == "__main__":
-    modelLoader = ModelLoader.init()
+    modelLoader = ModelLoader()
     app = AversarialGUI(modelLoader=modelLoader)
     app.mainloop()

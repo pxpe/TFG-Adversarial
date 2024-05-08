@@ -13,7 +13,7 @@ from tkinter import messagebox
 
 from PIL import Image
 
-from model_loader import ModelLoader
+from model_loader.loader import ModelLoader
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -60,7 +60,7 @@ class AversarialGUI(customtkinter.CTk):
         self.sidebar_model_label = customtkinter.CTkLabel(self.sidebar_frame, text="Modelo:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
         self.sidebar_model_label.grid(row=1, column=0, padx=15, pady=0, sticky="ew")
 
-        self.sidebar_model = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=["ResNet50", "SignalModel"])
+        self.sidebar_model = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=["ResNet50", "SignalModel"], command=lambda model: self.model_loader.init_model(model))
         self.sidebar_model.grid(row=2, column=0, sticky="ew", padx=15, pady=0)
 
         self.sidebar_theme_label = customtkinter.CTkLabel(self.sidebar_frame, text="Tema:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
@@ -107,12 +107,13 @@ class AversarialGUI(customtkinter.CTk):
         self.img_display_label.grid(row=1, column=0, padx=0, pady=(20,20))
 
         # Configurar el frame de botones para la imagen
-        self.img_btn_frame = customtkinter.CTkFrame(self.img_display_frame, bg_color='#515151', corner_radius=20)
-        self.img_btn_frame.grid(row=1, column=1, rowspan=4, sticky="ew")
+        self.img_btn_frame = customtkinter.CTkFrame(self.img_display_frame, corner_radius=20)
+        self.img_btn_frame.grid(row=1, column=1, rowspan=4, padx=10,sticky="ew")
         self.img_btn_frame.grid_rowconfigure(2, weight=1)
 
         self.img_btn_analizar = customtkinter.CTkButton(self.img_btn_frame, text="Obtener predicción", font=customtkinter.CTkFont(family=self.font_family, size=12), command=self.__realizar_prediccion)
         self.img_btn_analizar.grid(row=0, column=0, padx=0, pady=0)
+
 
 
 
@@ -147,7 +148,16 @@ class AversarialGUI(customtkinter.CTk):
             
 
     def __realizar_prediccion(self):
-        modelo = self.model_loader.init_model(self.sidebar_model.get())
+        prediccion = self.model_loader.predict(self.current_image)
+        if prediccion:
+            print(f"Predicción: " + ', '.join([str(p) for p in prediccion]))
+
+            self.prediccion_label = customtkinter.CTkLabel(self.img_btn_frame, text=f'Predicción: {str(prediccion[0])}', font=customtkinter.CTkFont(family=self.font_family, size=14, weight="bold"),justify="left")
+            self.prediccion_label.grid(row=1, column=0, padx=(5,5), pady=(0,15))
+        else:
+            messagebox.showerror("Error", "No se ha podido realizar la predicción. Asegúrese de que el modelo esté cargado correctamente.")
+
+
 
 
 
