@@ -5,7 +5,7 @@
 
 from model_loader.model_utils.model_predictions import ModelPrediction
 from model_loader.model_utils.model_exceptions import ModelNotLoadedException
-from .model_interface import ModelInterface
+from model_interface import ModelInterface
 
 import tensorflow as t
 from keras.preprocessing import image

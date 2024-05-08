@@ -3,7 +3,6 @@
 # Descripción: Este script define la Interfaz común para todos los modelos del Model Loader.
 
 from model_loader.model_utils.model_predictions import ModelPrediction
-from typing import List
 
 class ModelInterface():
     def __init__(self) -> None:

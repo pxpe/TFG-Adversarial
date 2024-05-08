@@ -5,11 +5,8 @@
 from model_loader.model_utils.model_exceptions import InvadidModelName, ModelNotLoadedException
 from model_loader.model_utils.model_predictions import ModelPrediction
 
-from model_loader.models.ResNet50 import ModelResNet50
-from model_loader.models.SignalModel import ModelSignalModel
-
-import os
-
+from model_loader.models.implementations.ResNet50 import ModelResNet50
+from model_loader.models.implementations.SignalModel import ModelSignalModel
 
 class ModelLoader(): 
 
@@ -32,7 +29,6 @@ class ModelLoader():
         elif str_model == "SignalModel":
             self.model = ModelSignalModel()
             print(f"Modelo cargado: {self.model.get_name()}")
-
         else:
             raise InvadidModelName(model_name=str_model)
         
