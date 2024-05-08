@@ -1,6 +1,6 @@
 # Autor: José Luis López Ruiz
 # Fecha: 08/05/2024
-# Descripción: Este.
+# Descripción:  Este script define la clase ModelCustomModel, la cual implementa la interfaz CustomModelInterface y representa un modelo de red neuronal el cual puede ser instanciado a partir de la ruta de un modelo con formato .h5.
 
 
 from model_loader.model_utils.model_predictions import ModelPrediction
@@ -22,12 +22,9 @@ class ModelCustomModel(CustomModelInterface):
 
     def get_name(self) -> str:
         return self.model_name
-    
-    def predict(self, image_path: str) -> List[ModelPrediction]:
-        img = image.image_utils.load_img(image_path, target_size=(224, 224))
-        img = image.image_utils.img_to_array(img)
 
-        yhat = self.modelo.predict(n.expand_dims(img, axis=0))
-        return [ModelPrediction("Custom",str(yhat[0]))]
+    # Por implementar
+    def predict(self, image_path: str) -> tuple[ModelPrediction,List[ModelPrediction]]:
+        pass
 
     

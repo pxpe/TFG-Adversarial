@@ -1,6 +1,6 @@
 # Autor: José Luis López Ruiz
 # Fecha: 08/05/2024
-# Descripción: Este.
+# Descripción: Este script define la clase ModelSignalModel, la cual implementa la interfaz ModelInterface y representa un modelo de red neuronal creada, signal_model.h5.
 
 
 from model_loader.model_utils.model_predictions import ModelPrediction
@@ -24,8 +24,6 @@ class ModelSignalModel(ModelInterface):
     }
 
     MODEL_PATH = os.path.abspath(os.path.curdir + "/default_models/signal_model.h5")
-
-    print(MODEL_PATH)
 
     def __init__(self) -> None:
         print(self.MODEL_PATH)
