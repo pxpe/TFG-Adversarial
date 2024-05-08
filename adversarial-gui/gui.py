@@ -120,17 +120,7 @@ class AversarialGUI(customtkinter.CTk):
     def __buscar_imagen(self):
         filename =  filedialog.askopenfilename(parent=self,title="Seleccionar imagen", initialdir= os.curdir, filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.bmp")], defaultextension=".jpg", multiple=False)
         if filename == "": return
-        # if self.current_image is not None:
-        #     dialog = CTkYesNoDialog(self, text="¿Desea cambiar la imagen actual?", title="Cambiar imagen")
-            
-        #     if dialog._is_accepted():
-        #         self.current_image = filename
-        #         messagebox.showinfo("Información", "Imagen cambiada correctamente")
-        #     else:
-        #         return
-        # else:
-        #     self.current_image = filename
-        #     messagebox.showinfo("Información", "Imagen cargada correctamente")
+
         self.current_image = filename
         messagebox.showinfo("Información", "Imagen cargada correctamente")
         imgDir = filename.split("/")[-2:]
@@ -150,8 +140,6 @@ class AversarialGUI(customtkinter.CTk):
     def __realizar_prediccion(self):
         prediccion = self.model_loader.predict(self.current_image)
         if prediccion:
-            print(f"Predicción: " + ', '.join([str(p) for p in prediccion]))
-
             self.prediccion_label = customtkinter.CTkLabel(self.img_btn_frame, text=f'Predicción: {str(prediccion[0])}', font=customtkinter.CTkFont(family=self.font_family, size=14, weight="bold"),justify="left")
             self.prediccion_label.grid(row=1, column=0, padx=(5,5), pady=(0,15))
         else:

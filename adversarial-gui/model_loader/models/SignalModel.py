@@ -12,6 +12,7 @@ from keras.preprocessing import image
 import numpy as n
 from typing import List
 import os
+import cv2
 
 class ModelSignalModel(ModelInterface):
 
@@ -22,13 +23,13 @@ class ModelSignalModel(ModelInterface):
         3: 'Señal STOP'
     }
 
-    MODEL_PATH = os.path.join(os.curdir,"default_models", "signal_model.h5")
+    MODEL_PATH = os.path.abspath(os.path.curdir + "/default_models/signal_model.h5")
+
+    print(MODEL_PATH)
 
     def __init__(self) -> None:
         print(self.MODEL_PATH)
-        print(os.path.curdir)
         try:
-            
             self.model = t.keras.models.load_model(self.MODEL_PATH)
             self.model_name = 'SignalModel'
         except Exception as e:
@@ -39,14 +40,18 @@ class ModelSignalModel(ModelInterface):
         return self.model_name
     
     def predict(self, image_path: str) -> List[ModelPrediction]:
-        img = image.image_utils.load_img(image_path, target_size=(224, 224))
-        img = image.image_utils.img_to_array(img)
+        img = cv2.imread(image_path)
+        resize = t.image.resize(img, [256, 256])
 
-        yhat = self.model.predict(n.expand_dims(img, axis=0))
+        yhat = self.model.predict(n.expand_dims(resize/255, axis=0))
         
-        result = []
-        print(yhat)
+        predictions = []
         for i, clase in enumerate(yhat[0]):
-            result.append(ModelPrediction(self.CLASES[i], str(clase)+'%'))
-        return result
+            predictions.append(ModelPrediction(self.CLASES[i], str(round(clase * 100,2))))
+
+        result_index = n.argmax(yhat)
+        result = ModelPrediction(self.CLASES[result_index], str(round(yhat[0][result_index]*100,2)))
+
+        print("RESULT",result.predicted_class, result.predicted_class_reliability)
+        return [result, predictions]
     

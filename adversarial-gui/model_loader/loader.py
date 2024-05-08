@@ -49,7 +49,7 @@ class ModelLoader():
                 self.init_model(str_model)
 
 
-    def predict(self, image: str) -> list[ModelPrediction]:
+    def predict(self, image: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
         if self.model is None:
             raise ModelNotLoadedException()
         else:

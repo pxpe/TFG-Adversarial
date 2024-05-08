@@ -12,12 +12,12 @@ class ModelInterface():
     def get_name(self) -> str:
         pass
 
-    def predict(self, image_path: str) -> List[ModelPrediction]:
+    def predict(self, image_path: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
         pass
 
 class CustomModelInterface(ModelInterface):
     def __init__(self, model_path: str) -> None:
         pass
     
-    def predict(self, image_path: str) -> List[ModelPrediction]:
+    def predict(self, image_path: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
         pass

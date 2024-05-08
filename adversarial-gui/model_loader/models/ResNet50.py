@@ -23,12 +23,12 @@ class ModelResNet50(ModelInterface):
     def get_name(self) -> str:
         return self.model_name
     
-    def predict(self, image_path: str) -> List[ModelPrediction]:
+    def predict(self, image_path: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
         img = image.image_utils.load_img(image_path, target_size=(224, 224))
         img = image.image_utils.img_to_array(img)
 
         x = preprocess_input(n.expand_dims(img, axis=0))
         preds = self.model.predict(x)
         decoded_preds = decode_predictions(preds, top=5)[0]
-        return [ModelPrediction(p[1],str(round(p[2]*100,2))) for p in decoded_preds]
+        return [ModelPrediction(decoded_preds[0][1],str(round(decoded_preds[0][2] * 100,2))) , [ModelPrediction(p[1],str(round(p[2]*100,2))) for p in decoded_preds]]
     
