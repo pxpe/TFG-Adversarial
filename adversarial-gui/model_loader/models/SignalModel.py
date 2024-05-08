@@ -22,11 +22,17 @@ class ModelSignalModel(ModelInterface):
         3: 'Señal STOP'
     }
 
+    MODEL_PATH = os.path.join(os.curdir,"default_models", "signal_model.h5")
+
     def __init__(self) -> None:
+        print(self.MODEL_PATH)
+        print(os.path.curdir)
         try:
-            self.model = t.keras.models.load_model()
+            
+            self.model = t.keras.models.load_model(self.MODEL_PATH)
             self.model_name = 'SignalModel'
-        except Exception:
+        except Exception as e:
+            print(e)
             raise ModelNotLoadedException()
 
     def get_name(self) -> str:

@@ -60,7 +60,7 @@ class AversarialGUI(customtkinter.CTk):
         self.sidebar_model_label = customtkinter.CTkLabel(self.sidebar_frame, text="Modelo:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
         self.sidebar_model_label.grid(row=1, column=0, padx=15, pady=0, sticky="ew")
 
-        self.sidebar_model = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=["ResNet50", "SignalModel"], command=lambda model: self.model_loader.init_model(model))
+        self.sidebar_model = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=["ResNet50", "SignalModel"], command=lambda model: self.model_loader.switch_model(model))
         self.sidebar_model.grid(row=2, column=0, sticky="ew", padx=15, pady=0)
 
         self.sidebar_theme_label = customtkinter.CTkLabel(self.sidebar_frame, text="Tema:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
