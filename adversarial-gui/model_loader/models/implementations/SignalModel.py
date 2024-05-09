@@ -5,7 +5,10 @@
 
 from model_loader.model_utils.model_predictions import ModelPrediction
 from model_loader.model_utils.model_exceptions import ModelNotLoadedException
-from model_interface import ModelInterface
+from ..model_interface import ModelInterface
+
+from model_loader.model_utils.model_singleton import Singleton
+
 
 import tensorflow as t
 from keras.preprocessing import image
@@ -14,6 +17,7 @@ from typing import List
 import os
 import cv2
 
+@Singleton
 class ModelSignalModel(ModelInterface):
 
     CLASES = {

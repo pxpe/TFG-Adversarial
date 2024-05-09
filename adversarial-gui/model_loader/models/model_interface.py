@@ -5,7 +5,8 @@
 from model_loader.model_utils.model_predictions import ModelPrediction
 
 class ModelInterface():
-    def __init__(self) -> None:
+
+    def _init(self) -> None:
         pass
 
     def get_name(self) -> str:
@@ -14,9 +15,11 @@ class ModelInterface():
     def predict(self, image_path: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
         pass
 
-class CustomModelInterface(ModelInterface):
-    def __init__(self, model_path: str) -> None:
-        pass
+
+
+# class CustomModelInterface(ModelInterface):
+#     def __init__(self, model_path: str) -> None:
+#         pass
     
-    def predict(self, image_path: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
-        pass
+#     def predict(self, image_path: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
+#         pass

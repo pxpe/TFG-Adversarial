@@ -4,9 +4,8 @@
 
 
 from model_loader.model_utils.model_predictions import ModelPrediction
-from typing import List
 
-from .model_interface import ModelInterface
+from ..model_interface import ModelInterface
 
 from keras.preprocessing import image
 from keras.applications.resnet import ResNet50
@@ -14,8 +13,11 @@ from keras.applications.resnet import preprocess_input
 from keras.applications.resnet import decode_predictions
 import numpy as n
 
+from model_loader.model_utils.model_singleton import Singleton
 
+@Singleton
 class ModelResNet50(ModelInterface):
+
     def __init__(self) -> None:
         self.model = ResNet50(include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None, classes=1000)
         self.model_name = "ResNet50"
