@@ -7,6 +7,9 @@ from gui import AversarialGUI
 from model_loader.loader import ModelLoader
 
 if __name__ == "__main__":
+    """
+        Función principal que ejecuta la aplicación de interfaz gráfica de usuario.
+    """
     modelLoader = ModelLoader()
     app = AversarialGUI(modelLoader=modelLoader)
     app.mainloop()

@@ -11,9 +11,15 @@ from .implementations.SignalModel import ModelSignalModel
 
 
 class ResNet50Factory(AbstractModelFactory):
+    """
+        Factoría concreta para crear el modelo ResNet50.
+    """
     def create_model(self) -> ModelInterface:
         return ModelResNet50()
     
 class SignalModelFactory(AbstractModelFactory):
+    """
+        Factoría concreta para crear el modelo SignalModel.
+    """
     def create_model(self) -> ModelInterface:
         return ModelSignalModel()

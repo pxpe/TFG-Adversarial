@@ -6,6 +6,11 @@
 
 
 class ModelPrediction():
+    """
+        Clase que define una Predicción con dos atributos de clase.
+        - predicted_class: Clase predicha por el modelo.
+        - predicted_class_reliability: Fiabilidad de la predicción en porcentaje
+    """
     def __init__(self, predicted_class : str, predicted_class_reliability : str):
         self.predicted_class = predicted_class
         self.predicted_class_reliability = predicted_class_reliability

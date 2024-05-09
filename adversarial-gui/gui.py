@@ -21,6 +21,16 @@ customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard),
 
 class AversarialGUI(customtkinter.CTk):
 
+    """
+        Clase que representa la interfaz gráfica de usuario de la aplicación.
+        Parámetros:
+        -    title (str): Título de la ventana.
+        -    geometry (str): Tamaño de la ventana.
+        -    font_family (str): Fuente de texto a utilizar.
+        -    modelLoader (ModelLoader): Instancia del cargador de modelos.
+    """
+
+
     TEMAS_DISPONIBLES = {
         "Oscuro": "Dark",
         "Claro": "Light"
@@ -118,6 +128,11 @@ class AversarialGUI(customtkinter.CTk):
 
 
     def __buscar_imagen(self):
+
+        """
+            Método que permite al usuario seleccionar una imagen de su sistema de archivos.
+        """
+
         filename =  filedialog.askopenfilename(parent=self,title="Seleccionar imagen", initialdir= os.curdir, filetypes=[("Archivos de imagen", "*.jpg *.jpeg *.png *.bmp")], defaultextension=".jpg", multiple=False)
         if filename == "": return
 
@@ -128,9 +143,17 @@ class AversarialGUI(customtkinter.CTk):
         self.__mostrar_imagen()
 
     def __mostrar_imagen(self):
+        """
+            Método que muestra la imagen seleccionada por el usuario en la interfaz gráfica.
+        """
+
         self.__instanciar_widgets_imagen()
     
     def __cambiar_tema(self, theme : str) -> None:
+        """
+            Método que cambia el tema de la interfaz gráfica.
+        """
+
         try:
             customtkinter.set_appearance_mode(self.TEMAS_DISPONIBLES[theme])
         except KeyError:
@@ -138,10 +161,16 @@ class AversarialGUI(customtkinter.CTk):
             
 
     def __realizar_prediccion(self):
+        """
+            Método que realiza una predicción sobre la imagen cargada.
+        """
+
         prediccion = self.model_loader.predict(self.current_image)
         if prediccion:
             self.prediccion_label = customtkinter.CTkLabel(self.img_btn_frame, text=f'Predicción: {str(prediccion[0])}', font=customtkinter.CTkFont(family=self.font_family, size=14, weight="bold"),justify="left")
             self.prediccion_label.grid(row=1, column=0, padx=(5,5), pady=(0,15))
+
+            
         else:
             messagebox.showerror("Error", "No se ha podido realizar la predicción. Asegúrese de que el modelo esté cargado correctamente.")
 

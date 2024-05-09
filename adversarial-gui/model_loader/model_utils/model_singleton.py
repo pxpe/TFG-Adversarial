@@ -4,6 +4,10 @@
 
 
 def Singleton(cls):
+    """
+        Decorador Singleton que garantiza que una clase solo tenga una instancia en ejecución.
+    """
+
     instances = {}
     def get_instance(*args, **kwargs):
         if cls not in instances:

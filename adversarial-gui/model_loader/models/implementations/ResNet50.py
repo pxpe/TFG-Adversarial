@@ -17,6 +17,9 @@ from model_loader.model_utils.model_singleton import Singleton
 
 @Singleton
 class ModelResNet50(ModelInterface):
+    """
+        Clase que implementa el modelo ResNet50.
+    """
 
     def __init__(self) -> None:
         self.model = ResNet50(include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None, classes=1000)

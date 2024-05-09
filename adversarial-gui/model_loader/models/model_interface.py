@@ -5,14 +5,26 @@
 from model_loader.model_utils.model_predictions import ModelPrediction
 
 class ModelInterface():
+    """
+        Interfaz común para todos los modelos del Model Loader.
+    """
 
     def _init(self) -> None:
+        """
+            Inicializa el modelo.
+        """
         pass
 
     def get_name(self) -> str:
+        """
+            Devuelve el nombre del modelo.
+        """
         pass
 
     def predict(self, image_path: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
+        """
+            Realiza una predicción sobre una imagen.
+        """
         pass
 
 

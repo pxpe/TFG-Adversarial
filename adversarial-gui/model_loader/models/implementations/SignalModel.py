@@ -19,6 +19,14 @@ import cv2
 
 @Singleton
 class ModelSignalModel(ModelInterface):
+    """
+        Clase que implementa el modelo SignalModel.
+        Clases del modelo:
+        - 0: Señal Máx. 120Km/h
+        - 1: Señal Máx. 50Km/h
+        - 2: Señal Radar
+        - 3: Señal STOP
+    """
 
     CLASES = {
         0: 'Señal Máx. 120Km/h',
@@ -54,6 +62,5 @@ class ModelSignalModel(ModelInterface):
         result_index = n.argmax(yhat)
         result = ModelPrediction(self.CLASES[result_index], str(round(yhat[0][result_index]*100,2)))
 
-        print("RESULT",result.predicted_class, result.predicted_class_reliability)
         return [result, predictions]
     
