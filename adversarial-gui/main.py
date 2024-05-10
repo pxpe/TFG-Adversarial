@@ -3,7 +3,7 @@
 # Descripción: Este script ejecuta la aplicación de interfaz gráfica de usuario.
 
 
-from gui import AversarialGUI
+from gui.custom_gui import AversarialGUI
 from model_loader.loader import ModelLoader
 
 if __name__ == "__main__":

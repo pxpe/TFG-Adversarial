@@ -8,16 +8,17 @@ from typing import Union
 
 import customtkinter
 from customtkinter import filedialog, CTkInputDialog
-from custom_widgets.ctk_yes_no_dialog import CTkYesNoDialog
+from .custom_widgets.ctk_yes_no_dialog import CTkYesNoDialog
 from tkinter import messagebox
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 from PIL import Image
 
 from model_loader.loader import ModelLoader
+from model_loader.model_utils.model_predictions import generate_prediction_graph
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
-
 
 class AversarialGUI(customtkinter.CTk):
 
@@ -119,7 +120,7 @@ class AversarialGUI(customtkinter.CTk):
         # Configurar el frame de botones para la imagen
         self.img_btn_frame = customtkinter.CTkFrame(self.img_display_frame, corner_radius=20)
         self.img_btn_frame.grid(row=1, column=1, rowspan=4, padx=10,sticky="ew")
-        self.img_btn_frame.grid_rowconfigure(2, weight=1)
+        self.img_btn_frame.grid_rowconfigure(3, weight=1)
 
         self.img_btn_analizar = customtkinter.CTkButton(self.img_btn_frame, text="Obtener predicción", font=customtkinter.CTkFont(family=self.font_family, size=12), command=self.__realizar_prediccion)
         self.img_btn_analizar.grid(row=0, column=0, padx=0, pady=0)
@@ -167,8 +168,17 @@ class AversarialGUI(customtkinter.CTk):
 
         prediccion = self.model_loader.predict(self.current_image)
         if prediccion:
+            print(prediccion[1])
+
             self.prediccion_label = customtkinter.CTkLabel(self.img_btn_frame, text=f'Predicción: {str(prediccion[0])}', font=customtkinter.CTkFont(family=self.font_family, size=14, weight="bold"),justify="left")
             self.prediccion_label.grid(row=1, column=0, padx=(5,5), pady=(0,15))
+
+            # Generar gráfico de barras con las últimas cuatro predicciones
+            fig, ax = generate_prediction_graph(prediccion[1])
+
+            canvas = FigureCanvasTkAgg(fig, master=self.img_btn_frame)
+            canvas.draw()
+            canvas.get_tk_widget().grid(row=2, column=0, padx=(5,5), pady=(0,15))
 
             
         else:
