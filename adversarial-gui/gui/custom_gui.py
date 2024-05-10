@@ -91,9 +91,9 @@ class AversarialGUI(customtkinter.CTk):
 
         # Configurar el frame de búsqueda de imagen
         self.img_search_frame = customtkinter.CTkFrame(self.content_frame, width=400, height=400, corner_radius=20)
-        self.img_search_frame.grid(row=0, column=0, padx=(20,20), pady=20,sticky="ew")
+        self.img_search_frame.grid(row=0, column=0, padx=(20,20), pady=20)
         self.img_search_frame.grid_rowconfigure(1, weight=1)
-        self.img_search_frame.grid_columnconfigure(3, weight=1)
+        self.img_search_frame.grid_columnconfigure(6, weight=4)
 
         self.image_label = customtkinter.CTkLabel(self.img_search_frame, text="Imagen:", font=customtkinter.CTkFont(family=self.font_family, size=14, weight="bold"),justify="left")
         self.image_label.grid(row=0, column=1, padx=(20,0), pady=0)
@@ -168,8 +168,9 @@ class AversarialGUI(customtkinter.CTk):
 
         prediccion = self.model_loader.predict(self.current_image)
         if prediccion:
-            print(prediccion[1])
 
+
+            self.img_btn_analizar.destroy()
             self.prediccion_label = customtkinter.CTkLabel(self.img_btn_frame, text=f'Predicción: {str(prediccion[0])}', font=customtkinter.CTkFont(family=self.font_family, size=14, weight="bold"),justify="left")
             self.prediccion_label.grid(row=1, column=0, padx=(5,5), pady=(0,15))
 
@@ -180,7 +181,6 @@ class AversarialGUI(customtkinter.CTk):
             canvas.draw()
             canvas.get_tk_widget().grid(row=2, column=0, padx=(5,5), pady=(0,15))
 
-            
         else:
             messagebox.showerror("Error", "No se ha podido realizar la predicción. Asegúrese de que el modelo esté cargado correctamente.")
 

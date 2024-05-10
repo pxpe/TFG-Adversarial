@@ -33,17 +33,17 @@ def generate_prediction_graph(model_predictions : List[ModelPrediction]) -> tupl
 
     model_predictions = model_predictions[:4]
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(4, 2),)
+    # ponemos las etiquetas de las barras con tamaño 6
+    ax.tick_params(labelsize=6)
+
 
     labels = [prediction.predicted_class for prediction in model_predictions]
-    probabilities = [str(round(prediction.predicted_class_reliability * 100,2)) for prediction in model_predictions]
-    bar_labels = ['red', 'blue', '_red', 'orange']
-    bar_colors = ['tab:red', 'tab:blue', 'tab:red', 'tab:orange']
+    probabilities = [round(float(prediction.predicted_class_reliability),2)  for prediction in model_predictions]
+    bar_colors = ['tab:red', 'tab:blue', 'tab:olive', 'tab:green']
 
-    ax.bar(labels, probabilities, label=bar_labels, color=bar_colors)
+    ax.bar(x=[i for i in range(0,4)],height=probabilities,tick_label=labels, color=bar_colors)
+    ax.set_title('Predicciones del modelo en %')
 
-
-    ax.set_title('Predicciones del modelo')
-    fig.show()
     return (fig, ax)
 
