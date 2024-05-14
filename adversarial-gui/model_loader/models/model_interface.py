@@ -4,6 +4,9 @@
 
 from model_loader.model_utils.model_predictions import ModelPrediction
 
+from typing import Union
+from PIL.Image import Image
+
 class ModelInterface():
     """
         Interfaz común para todos los modelos del Model Loader.
@@ -21,17 +24,9 @@ class ModelInterface():
         """
         pass
 
-    def predict(self, image_path: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
+    def predict(self, image_path: Union[Image, str]) -> tuple[ModelPrediction,list[ModelPrediction]]:
         """
             Realiza una predicción sobre una imagen.
         """
         pass
 
-
-
-# class CustomModelInterface(ModelInterface):
-#     def __init__(self, model_path: str) -> None:
-#         pass
-    
-#     def predict(self, image_path: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
-#         pass

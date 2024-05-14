@@ -13,6 +13,9 @@ from keras.applications.resnet import preprocess_input
 from keras.applications.resnet import decode_predictions
 import numpy as n
 
+from typing import Union
+from PIL.Image import Image
+
 from model_loader.model_utils.model_singleton import Singleton
 
 @Singleton
@@ -28,7 +31,7 @@ class ModelResNet50(ModelInterface):
     def get_name(self) -> str:
         return self.model_name
     
-    def predict(self, image_path: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
+    def predict(self, image_path: Union[Image, str]) -> tuple[ModelPrediction,list[ModelPrediction]]:
         img = image.image_utils.load_img(image_path, target_size=(224, 224))
         img = image.image_utils.img_to_array(img)
 

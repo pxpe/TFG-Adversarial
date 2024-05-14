@@ -3,19 +3,19 @@
 # Descripción: Este script contiene la clase CustomGUI, la cual se encarga de crear la interfaz gráfica de usuario.
 
 import os
-from typing import Union
-
+from typing import Union, Literal
+from time import time
 
 import customtkinter
 from customtkinter import filedialog, CTkInputDialog
-from .custom_widgets.ctk_yes_no_dialog import CTkYesNoDialog
+from .custom_widgets.ctk_adversarial_result import AdversarialResult
 from tkinter import messagebox
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from PIL import Image
-from time import time
 
 from model_loader.loader import ModelLoader
+from ..adversarial_attacks.FGSM import FGSMAttack
 from model_loader.model_utils.model_predictions import generate_prediction_graph
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -38,6 +38,10 @@ class AversarialGUI(customtkinter.CTk):
         "Claro": "Light"
     }
 
+    MODELOS_DISPONIBLES = [ "ResNet50", "SignalModel", "MobileNetV2"]
+
+    ATAQUES_DISPONIBLES = ["N/A","FGSM"]
+
     def __init__(self, title : str = "Adversarial GUI",geometry : str = "1100x580", font_family : str = "Consolas", modelLoader : ModelLoader = None):
         super().__init__()
         
@@ -45,6 +49,7 @@ class AversarialGUI(customtkinter.CTk):
         self.font_family = font_family
         self.current_image = None
         self.model_loader = modelLoader
+        self.attack = None
 
         # Configurar la ventana principal
         self.title(title)
@@ -64,7 +69,7 @@ class AversarialGUI(customtkinter.CTk):
         # Configurar el sidebar
         self.sidebar_frame = customtkinter.CTkFrame(self, width=180, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=1, rowspan=4, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(4, weight=1)
+        self.sidebar_frame.grid_rowconfigure(6, weight=1)
 
         self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text=self.title_str, font=customtkinter.CTkFont(family=self.font_family, size=20, weight="bold"),justify="left")
         self.logo_label.grid(row=0, column=0, padx=20, pady=20)
@@ -72,22 +77,28 @@ class AversarialGUI(customtkinter.CTk):
         self.sidebar_model_label = customtkinter.CTkLabel(self.sidebar_frame, text="Modelo:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
         self.sidebar_model_label.grid(row=1, column=0, padx=15, pady=0, sticky="ew")
 
-        self.sidebar_model = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=["ResNet50", "SignalModel"], command=lambda model: self.model_loader.switch_model(model))
+        self.sidebar_model = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=self.MODELOS_DISPONIBLES, command= lambda model: self.model_loader.switch_model(model))
         self.sidebar_model.grid(row=2, column=0, sticky="ew", padx=15, pady=0)
 
+        self.sidebarl_attack_label = customtkinter.CTkLabel(self.sidebar_frame, text="Ataque:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
+        self.sidebarl_attack_label.grid(row=3, column=0, sticky="ew",padx=15, pady=(5,0))
+
+        self.sidebar_attack = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=self.ATAQUES_DISPONIBLES, command = lambda attack: self.__cambiar_ataque(attack))
+        self.sidebar_attack.grid(row=4, column=0, sticky="ew",padx=15, pady=0)
+
         self.sidebar_theme_label = customtkinter.CTkLabel(self.sidebar_frame, text="Tema:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
-        self.sidebar_theme_label.grid(row=5, column=0, sticky="ew",padx=15, pady=0)
+        self.sidebar_theme_label.grid(row=7, column=0, sticky="ew",padx=15, pady=0)
 
         self.sidebar_theme = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=["Oscuro", "Claro"], command = lambda tema: self.__cambiar_tema(theme=tema))
-        self.sidebar_theme.grid(row=6, column=0, sticky="ew",padx=15, pady=(0, 20))
+        self.sidebar_theme.grid(row=8, column=0, sticky="ew",padx=15, pady=(0, 20))
 
     def __instanciar_contenido(self):
 
         # Configurar el contenido principal del GUI
 
         self.content_frame = customtkinter.CTkFrame(self, corner_radius=0)
-        self.content_frame.grid(row=0, column=2, rowspan=1, sticky="ew")
-        self.content_frame.grid_rowconfigure(2, weight=1)
+        self.content_frame.grid(row=0, column=2, rowspan=1,columnspan=4, sticky="ew")
+        self.content_frame.grid_rowconfigure(6, weight=1)
         self.content_frame.grid_columnconfigure(1, weight=1)
 
         # Configurar el frame de búsqueda de imagen
@@ -110,22 +121,21 @@ class AversarialGUI(customtkinter.CTk):
        
         # Configurar el frame de visualización de imagen
         self.img_display_frame = customtkinter.CTkFrame(self.content_frame, corner_radius=20)
-        self.img_display_frame.grid(row=1, column=0, padx=0, pady=0, sticky="ew")
+        self.img_display_frame.grid(row=1, column=0, padx=20, pady=0, sticky="ew")
         self.img_display_frame.grid_rowconfigure(1, weight=0)
         self.img_display_frame.grid_columnconfigure(1, weight=0)
 
-        my_img = customtkinter.CTkImage(light_image=Image.open(str(self.current_image)), size=(400, 400))
+        my_img = customtkinter.CTkImage(light_image=Image.open(str(self.current_image)), size=(350, 350))
         self.img_display_label = customtkinter.CTkLabel(self.img_display_frame, image=my_img, text="Previsualización de la imágen", compound='top', font=customtkinter.CTkFont(family=self.font_family, size=14, weight="normal"), corner_radius=20)
         self.img_display_label.grid(row=1, column=0, padx=0, pady=(20,20))
 
         # Configurar el frame de botones para la imagen
         self.img_btn_frame = customtkinter.CTkFrame(self.img_display_frame, corner_radius=20)
-        self.img_btn_frame.grid(row=1, column=1, rowspan=4, padx=10,sticky="ew")
+        self.img_btn_frame.grid(row=1, column=1, rowspan=4, padx=10, pady=10,sticky="ew")
         self.img_btn_frame.grid_rowconfigure(4, weight=1)
 
         self.img_btn_analizar = customtkinter.CTkButton(self.img_btn_frame, text="Obtener predicción", font=customtkinter.CTkFont(family=self.font_family, size=12), command=self.__realizar_prediccion)
         self.img_btn_analizar.grid(row=0, column=0, padx=0, pady=0)
-
 
 
 
@@ -144,12 +154,43 @@ class AversarialGUI(customtkinter.CTk):
         self.image_label_path.configure(text=f".../{'/'.join(imgDir)}")
         self.__mostrar_imagen()
 
+    def __limpiar_attack_params(self):
+        try:
+            self.sidebar_attack_params.destroy()
+        except AttributeError:
+            pass
+        
+
+    def __mostrar_fgsm_params(self):
+
+        self.sidebar_attack_params = customtkinter.CTkFrame(self.sidebar_frame, corner_radius=10)
+        self.sidebar_attack_params.grid(row=5, column=0, sticky="ew",padx=10, pady=15)
+        self.sidebar_attack_params.grid_columnconfigure(1, weight=1)
+
+        self.fgsm_epsiplon_label = customtkinter.CTkLabel(self.sidebar_attack_params, text="Epsilon:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
+        self.fgsm_epsiplon_label.grid(row=0, column=0, sticky="ew",padx=15, pady=15)
+
+        self.fgsm_epsilon = customtkinter.CTkEntry(self.sidebar_attack_params, font=customtkinter.CTkFont(family=self.font_family, size=12), width=10, placeholder_text="0.1")
+        self.fgsm_epsilon.grid(row=0, column=1, sticky="ew",padx=15, pady=15)
+
+
     def __mostrar_imagen(self):
         """
             Método que muestra la imagen seleccionada por el usuario en la interfaz gráfica.
         """
 
         self.__instanciar_widgets_imagen()
+
+    def __cambiar_ataque(self, attack : str) -> None:
+        """
+            Método que cambia el ataque a realizar sobre la imagen cargada.
+        """
+        if attack == "N/A":
+            self.attack = None
+            self.__limpiar_attack_params()
+        if attack == "FGSM":
+            self.attack = attack
+            self.__mostrar_fgsm_params()
     
     def __cambiar_tema(self, theme : str) -> None:
         """
@@ -160,12 +201,47 @@ class AversarialGUI(customtkinter.CTk):
             customtkinter.set_appearance_mode(self.TEMAS_DISPONIBLES[theme])
         except KeyError:
             print(f"El tema '{theme}' no está disponible. Los temas disponibles son: {', '.join(self.TEMAS_DISPONIBLES.keys())}")
-            
+   
 
-    def __realizar_prediccion(self):
-        """
-            Método que realiza una predicción sobre la imagen cargada.
-        """
+    def __predecir_fgsm(self):
+        epsilon = self.fgsm_epsilon.get()
+
+        if not epsilon or type(epsilon) not in [int, float]:
+            messagebox.showerror("Error", "El valor de epsilon es incorrecto.")
+            return
+        
+        epsilon = float(epsilon)
+        
+        prediccion_real = self.model_loader.predict(self.current_image)
+        fig1, ax1 = generate_prediction_graph(prediccion_real[1])
+
+        
+        fgsm = FGSMAttack(self.current_image, epsilon = epsilon, model = self.model_loader)
+
+        perturbacion = fgsm.get_adversarial_pattern()
+        imagen_adversaria = fgsm.get_adversarial_image()
+
+        prediccion_adversaria = self.model_loader.predict(imagen_adversaria)
+        fig2, ax2 = generate_prediction_graph(prediccion_adversaria[1])
+
+
+        self.result_frame = customtkinter.CTkFrame(self.content_frame, corner_radius=20)
+        self.result_frame.grid(row=2, column=0, padx=20, pady=0, sticky="ew")
+        self.result_frame.grid_rowconfigure(1, weight=0)
+        self.result_frame.grid_columnconfigure(3, weight=0)
+
+        self.real_result = AdversarialResult(self.result_frame, width=200, height=200, image=fgsm.get_source_image(), descripcion="Imagen original", step_size=0, grafico=fig1, font_family=self.font_family)
+        self.real_result.grid(row=0, column=0, padx=0, pady=0)
+
+        self.perturbacion_result = AdversarialResult(self.result_frame, width=200, height=200, image=perturbacion, descripcion="Perturbación", step_size=epsilon, grafico=None, font_family=self.font_family)
+        self.perturbacion_result.grid(row=0, column=1, padx=0, pady=0)
+
+        self.adversarial_result = AdversarialResult(self.result_frame, width=200, height=200, image=imagen_adversaria, descripcion=f"Imagen adversaria con epsilon = {epsilon}", step_size=epsilon, grafico=fig2, font_family=self.font_family)
+        self.adversarial_result.grid(row=0, column=2, padx=0, pady=0)
+
+
+
+    def __predecir_normal(self):
         time_start = time()
         prediccion = self.model_loader.predict(self.current_image)
         time_end = time()
@@ -188,6 +264,21 @@ class AversarialGUI(customtkinter.CTk):
             self.time_label.grid(row=3, column=0, padx=(5,5), pady=(0,15))
         else:
             messagebox.showerror("Error", "No se ha podido realizar la predicción. Asegúrese de que el modelo esté cargado correctamente.")
+
+
+    def __realizar_prediccion(self):
+        """
+            Método que realiza una predicción sobre la imagen cargada.
+        """
+        if self.current_image is None:
+            messagebox.showerror("Error", "No se ha cargado ninguna imagen.")
+            return
+
+        if self.attack is None:
+            self.__predecir_normal()
+        else:
+            if self.attack == "FGSM":
+                self.__predecir_fgsm()
 
 
 

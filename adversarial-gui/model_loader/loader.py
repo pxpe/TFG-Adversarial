@@ -5,10 +5,13 @@
 from model_loader.model_utils.model_exceptions import InvadidModelName, ModelNotLoadedException
 from model_loader.model_utils.model_predictions import ModelPrediction
 
-from model_loader.models.concrete_model_factories import ResNet50Factory, SignalModelFactory
-
 from model_loader.models.implementations.ResNet50 import ModelResNet50
 from model_loader.models.implementations.SignalModel import ModelSignalModel
+from model_loader.models.implementations.MobileNetV2 import ModelMobileNetV2
+
+from typing import Union
+from PIL.Image import Image
+
 
 class ModelLoader(): 
 
@@ -31,18 +34,19 @@ class ModelLoader():
             -    str_model (str): Nombre del modelo a cargar.
         """
         print(f"Cargando modelo: {str_model}")
+
         if not str_model:
             raise InvadidModelName(model_name=str_model)
         
         if str_model == "ResNet50": 
-            #self.model = ResNet50Factory()
             self.model = ModelResNet50()
-            print(f"Modelo cargado: {self.model.get_name()}")
 
         elif str_model == "SignalModel":
-            #self.model = SignalModelFactory()
             self.model = ModelSignalModel()
-            print(f"Modelo cargado: {self.model.get_name()}")
+
+        elif str_model == "MobileNetV2":
+            self.model = ModelMobileNetV2()
+
         else:
             raise InvadidModelName(model_name=str_model)
         
@@ -64,7 +68,8 @@ class ModelLoader():
         print(f"Modelo cargado: {self.model.get_name()}")
 
 
-    def predict(self, image: str) -> tuple[ModelPrediction,list[ModelPrediction]]:
+
+    def predict(self, image: Union[Image, str]) -> tuple[ModelPrediction,list[ModelPrediction]]:
         """
             Realiza una predicción sobre una imagen usando el modelo cargado.
             Parametros:	

@@ -11,11 +11,11 @@ from model_loader.model_utils.model_singleton import Singleton
 
 
 import tensorflow as t
-from keras.preprocessing import image
 import numpy as n
-from typing import List
 import os
 import cv2
+from typing import Union
+from PIL.Image import Image
 
 @Singleton
 class ModelSignalModel(ModelInterface):
@@ -49,7 +49,7 @@ class ModelSignalModel(ModelInterface):
     def get_name(self) -> str:
         return self.model_name
     
-    def predict(self, image_path: str) -> List[ModelPrediction]:
+    def predict(self, image_path: Union[Image, str]) -> tuple[ModelPrediction,list[ModelPrediction]]:
         img = cv2.imread(image_path)
         resize = t.image.resize(img, [256, 256])
 
