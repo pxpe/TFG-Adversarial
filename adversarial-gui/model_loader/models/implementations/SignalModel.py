@@ -22,6 +22,8 @@ from PIL.Image import Image
 import tensorflow as tf
 from tensorflow import Tensor
 
+from keras.applications import imagenet_utils
+
 
 @Singleton
 class ModelSignalModel(ModelInterface):
@@ -34,7 +36,7 @@ class ModelSignalModel(ModelInterface):
         - 3: Señal STOP
     """
 
-    MODEL_PATH = os.path.abspath(os.path.curdir + "/default_models/signal_model.h5")
+    MODEL_PATH = os.path.abspath(os.path.curdir + "/adversarial-gui/default_models/signal_model.h5")
 
     def __init__(self) -> None:
         self.CLASES = getSignalModelIndexToLabels()
@@ -42,21 +44,22 @@ class ModelSignalModel(ModelInterface):
             self.model = t.keras.models.load_model(self.MODEL_PATH)
             self.model_name = 'SignalModel'
         except Exception as e:
+            print(e)
             raise ModelNotLoadedException()
 
     def get_name(self) -> str:
         return self.model_name
     
-    def predict(self, image_path: Union[Image, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
+    def predict(self, image_path: Union[Image,Tensor, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
         if type(image_path) == str:
-            img = image.image_utils.load_img(image_path, target_size=(224, 224))
-        else:
+            img = cv2.imread(image_path)
+            img = t.image.resize(img, [256, 256])
+        elif type(image_path) == Image:
             img = image.image_utils.img_to_array(image_path)
-        resize = t.image.resize(img, [256, 256])
+        else:
+            img = image_path[0].numpy()
 
-        x = self.preprocess_image(resize)
-
-        preds = self.model.predict(x)
+        preds = self.model.predict(n.expand_dims(img/255, axis=0))
         
         if not_decoded:
             return preds
@@ -71,7 +74,12 @@ class ModelSignalModel(ModelInterface):
         return [result, predictions]
     
     def preprocess_image(self, image: Tensor) -> Tensor:
-        return n.expand_dims(image/255, axis=0)
+        return imagenet_utils.preprocess_input(
+            image, data_format=None, mode="tf"
+        )
+
+    def resize_image(self, image: Tensor) -> Tensor:
+        return t.image.resize(image, [256, 256])
 
     def get_label(self, class_str: str) -> Tensor:
 
@@ -81,5 +89,5 @@ class ModelSignalModel(ModelInterface):
 
         return label
     
-    def get_model(self) -> t.keras.models.Model:
+    def get_model(self) -> t.keras.Model:
         return self.model

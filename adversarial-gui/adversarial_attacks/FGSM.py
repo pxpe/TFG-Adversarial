@@ -6,6 +6,8 @@ from model_loader.models.model_interface import ModelInterface
 
 import tensorflow as tf
 from keras.preprocessing import image
+import cv2
+import numpy as n
 
 from tensorflow import Tensor
 
@@ -28,7 +30,7 @@ class FGSMAttack():
         image_raw = tf.io.read_file(image_path)
         image = tf.image.decode_image(image_raw)
         image = tf.cast(image, tf.float32)
-        image = tf.image.resize(image, (224, 224))
+        image = self.model.resize_image(image)
         image = image[None, ...]
 
         image = self.model.preprocess_image(image)

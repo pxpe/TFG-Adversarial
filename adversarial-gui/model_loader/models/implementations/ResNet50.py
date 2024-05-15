@@ -36,7 +36,7 @@ class ModelResNet50(ModelInterface):
     def get_name(self) -> str:
         return self.model_name
     
-    def predict(self, image_path: Union[Image, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
+    def predict(self, image_path: Union[Image,Tensor, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
         if type(image_path) == str:
             img = image.image_utils.load_img(image_path, target_size=(224, 224))
         else:
@@ -52,6 +52,10 @@ class ModelResNet50(ModelInterface):
     
     def preprocess_image(self, image: Tensor) -> Tensor:
         return preprocess_input(image)
+
+    def resize_image(self, image: Tensor) -> Tensor:
+        return tf.image.resize(image, [256, 256])
+
 
     def get_label(self, class_str: str) -> Tensor:
 

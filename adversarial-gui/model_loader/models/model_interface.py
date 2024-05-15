@@ -26,7 +26,7 @@ class ModelInterface():
         """
         pass
 
-    def predict(self, image_path: Union[Image, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
+    def predict(self, image_path: Union[Image,Tensor, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
         """
             Realiza una predicción sobre una imagen.
             Parametros:
@@ -50,6 +50,14 @@ class ModelInterface():
 
             Retorna:
             -    Tensor: Imagen preprocesada.
+        """
+        pass
+
+    def resize_image(self, image: Tensor) -> Tensor:
+        """
+            Redimensiona una imagen al valor óptimo del modelo.
+            Parametros:
+            -    image (Tensor): Imagen a redimensionar.
         """
         pass
 

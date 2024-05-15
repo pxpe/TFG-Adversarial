@@ -247,14 +247,12 @@ class AversarialGUI(customtkinter.CTk):
 
         original_array = fgsm.get_source_image().numpy()
         img_original = Image.fromarray(((original_array[0] + 1) * 127.5).astype("uint8"))
-
+        
         perturbacion_array = perturbacion.numpy()
         img_perturbacion = Image.fromarray(((perturbacion_array[0] + 1) * 127.5).astype("uint8"))
 
-
         adversarial_array = imagen_adversaria.numpy()
         img_adversaria = Image.fromarray(((adversarial_array[0] + 1) * 127.5).astype("uint8"))
-
 
         # Configurar el frame de resultados
         

@@ -62,7 +62,6 @@ class ModelLoader():
             Parametros:	
             -    str_model (str): Nombre del modelo a cargar.
         """
-        print(f"Cargando modelo: {str_model}")
         try:
             self.model = self.models[str_model]
         except KeyError:
@@ -72,7 +71,7 @@ class ModelLoader():
 
 
 
-    def predict(self, image_path: Union[Image, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
+    def predict(self, image_path: Union[Image,Tensor, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
         """
             Realiza una predicción sobre una imagen usando el modelo cargado.
             Parametros:	
@@ -93,6 +92,17 @@ class ModelLoader():
             raise ModelNotLoadedException()
         else:
             return self.model.preprocess_image(image)
+
+    def resize_image(self, image: Tensor) -> Tensor:
+        """
+            Redimensiona una imagen al tamaño óptimo del modelo.
+            Parametros:	
+            -    image (Tensor): Imagen a redimensionar.
+        """
+        if self.model is None:
+            raise ModelNotLoadedException()
+        else:
+            return self.model.resize_image(image)
 
     def get_label(self, class_str: str) -> Tensor:
         """
