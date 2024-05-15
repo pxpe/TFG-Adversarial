@@ -1,3 +1,8 @@
+# Autor: José Luis López Ruiz
+# Fecha: 14/05/2024
+# Descripción: Este script define funciones para obtener las etiquetas de los modelos junto con sus índices.
+
+
 
 def getSignalModelIndexToLabels():
     return {

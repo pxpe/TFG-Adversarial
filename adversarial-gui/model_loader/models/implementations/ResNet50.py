@@ -50,6 +50,9 @@ class ModelResNet50(ModelInterface):
         decoded_preds = decode_predictions(preds, top=5)[0]
         return [ModelPrediction(decoded_preds[0][1],str(round(decoded_preds[0][2] * 100,2))) , [ModelPrediction(p[1],str(round(p[2]*100,2))) for p in decoded_preds]]
     
+    def preprocess_image(self, image: Tensor) -> Tensor:
+        return preprocess_input(image)
+
     def get_label(self, class_str: str) -> Tensor:
 
         class_str = class_str.replace("_", " ")

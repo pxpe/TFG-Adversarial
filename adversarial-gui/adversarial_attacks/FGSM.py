@@ -1,3 +1,6 @@
+# Autor: José Luis López Ruiz
+# Fecha: 14/05/2024
+# Descripción: Este script tiene la clase FGSMAttack que implementa el ataque FGSM (Fast Gradient Sign Method) para generar una imagen adversarial.
 
 from model_loader.models.model_interface import ModelInterface
 
@@ -6,17 +9,15 @@ from keras.preprocessing import image
 
 from tensorflow import Tensor
 
-from PIL.Image import Image
-
 class FGSMAttack():
 
     def __init__(self, source_image_path: str, epsilon : float, input_label: str, model : ModelInterface) -> None:
+        self.model = model
+        self.epsilon = epsilon
+        self.input_label = input_label
+
         self.source_image = self.__preprocess_image(source_image_path)
 
-        self.epsilon = epsilon
-        self.model = model
-
-        self.input_label = input_label
         self.loss_object = tf.keras.losses.CategoricalCrossentropy()
         self.pretrained_model = model.get_model()
         
@@ -29,14 +30,17 @@ class FGSMAttack():
         image = tf.cast(image, tf.float32)
         image = tf.image.resize(image, (224, 224))
         image = image[None, ...]
+
+        image = self.model.preprocess_image(image)
+
         return image
 
-    def __generate_adversarial_image(self):
+    def __generate_adversarial_image(self) -> Tensor:
         adv_img = self.source_image + (self.epsilon * self.adversarial_pattern)
         adv_img = tf.clip_by_value(adv_img, -1, 1)
         return adv_img
 
-    def __generate_adversarial_pattern(self):
+    def __generate_adversarial_pattern(self) -> Tensor:
         with tf.GradientTape() as tape:
             tape.watch(self.source_image)
             prediction = self.pretrained_model(self.source_image)

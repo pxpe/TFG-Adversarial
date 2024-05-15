@@ -1,3 +1,8 @@
+# Autor: José Luis López Ruiz
+# Fecha: 14/05/2024
+# Descripción: Este script implementa un widget personalizado para mostrar los resultados de un ataque adversarial.
+
+
 import customtkinter
 from matplotlib.figure import Figure
 

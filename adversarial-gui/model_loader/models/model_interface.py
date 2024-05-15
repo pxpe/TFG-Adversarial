@@ -42,6 +42,17 @@ class ModelInterface():
         """
         pass
 
+    def preprocess_image(self, image: Tensor) -> Tensor:
+        """
+            Preprocesa una imagen.
+            Parametros:
+            -    image (Tensor): Imagen a preprocesar.
+
+            Retorna:
+            -    Tensor: Imagen preprocesada.
+        """
+        pass
+
     def get_label(self, class_str: str) -> Tensor:
         """
             Obtiene la etiqueta de una clase.

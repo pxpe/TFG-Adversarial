@@ -231,19 +231,29 @@ class AversarialGUI(customtkinter.CTk):
 
         perturbacion = fgsm.get_adversarial_pattern()
         imagen_adversaria = fgsm.get_adversarial_image()
+        
+        from matplotlib import pyplot as plt
+
+        plt.figure()
+        plt.imshow(imagen_adversaria[0])
+        plt.show()
+
+        plt.figure()
+        plt.imshow(imagen_adversaria[0])
+        plt.show()
 
         prediccion_adversaria = self.model_loader.predict(imagen_adversaria)
         fig2, _ = generate_prediction_graph(prediccion_adversaria[1])
 
         original_array = fgsm.get_source_image().numpy()
-        img_original = Image.fromarray(original_array[0].astype("uint8"))
+        img_original = Image.fromarray(((original_array[0] + 1) * 127.5).astype("uint8"))
 
         perturbacion_array = perturbacion.numpy()
-        img_perturbacion = Image.fromarray(perturbacion_array[0].astype("uint8"))
+        img_perturbacion = Image.fromarray(((perturbacion_array[0] + 1) * 127.5).astype("uint8"))
 
 
         adversarial_array = imagen_adversaria.numpy()
-        img_adversaria = Image.fromarray(adversarial_array[0].astype("uint8"))
+        img_adversaria = Image.fromarray(((adversarial_array[0] + 1) * 127.5).astype("uint8"))
 
 
         # Configurar el frame de resultados

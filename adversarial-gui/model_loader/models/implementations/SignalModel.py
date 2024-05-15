@@ -54,7 +54,9 @@ class ModelSignalModel(ModelInterface):
             img = image.image_utils.img_to_array(image_path)
         resize = t.image.resize(img, [256, 256])
 
-        preds = self.model.predict(n.expand_dims(resize/255, axis=0))
+        x = self.preprocess_image(resize)
+
+        preds = self.model.predict(x)
         
         if not_decoded:
             return preds
@@ -68,6 +70,9 @@ class ModelSignalModel(ModelInterface):
 
         return [result, predictions]
     
+    def preprocess_image(self, image: Tensor) -> Tensor:
+        return n.expand_dims(image/255, axis=0)
+
     def get_label(self, class_str: str) -> Tensor:
 
         class_index = getSignalModelLabelsToIndex()[class_str]

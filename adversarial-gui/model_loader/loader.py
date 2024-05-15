@@ -83,6 +83,16 @@ class ModelLoader():
         else:
             return self.model.predict(image_path=image_path, not_decoded=not_decoded)
     
+    def preprocess_image(self, image: Image) -> Tensor:
+        """
+            Preprocesa una imagen para ser usada por el modelo.
+            Parametros:	
+            -    image (Image): Imagen a preprocesar.
+        """
+        if self.model is None:
+            raise ModelNotLoadedException()
+        else:
+            return self.model.preprocess_image(image)
 
     def get_label(self, class_str: str) -> Tensor:
         """
