@@ -5,10 +5,12 @@
 
 from model_loader.model_utils.model_predictions import ModelPrediction
 from model_loader.model_utils.model_exceptions import ModelNotLoadedException
+from model_loader.model_utils.model_labels import getSignalModelLabelsToIndex, getSignalModelIndexToLabels
+
 from ..model_interface import ModelInterface
 
 from model_loader.model_utils.model_singleton import Singleton
-
+from keras.preprocessing import image
 
 import tensorflow as t
 import numpy as n
@@ -16,6 +18,10 @@ import os
 import cv2
 from typing import Union
 from PIL.Image import Image
+
+import tensorflow as tf
+from tensorflow import Tensor
+
 
 @Singleton
 class ModelSignalModel(ModelInterface):
@@ -28,39 +34,47 @@ class ModelSignalModel(ModelInterface):
         - 3: Señal STOP
     """
 
-    CLASES = {
-        0: 'Señal Máx. 120Km/h',
-        1: 'Señal Máx. 50Km/h',
-        2: 'Señal Radar',
-        3: 'Señal STOP'
-    }
-
     MODEL_PATH = os.path.abspath(os.path.curdir + "/default_models/signal_model.h5")
 
     def __init__(self) -> None:
-        print(self.MODEL_PATH)
+        self.CLASES = getSignalModelIndexToLabels()
         try:
             self.model = t.keras.models.load_model(self.MODEL_PATH)
             self.model_name = 'SignalModel'
         except Exception as e:
-            print(e)
             raise ModelNotLoadedException()
 
     def get_name(self) -> str:
         return self.model_name
     
-    def predict(self, image_path: Union[Image, str]) -> tuple[ModelPrediction,list[ModelPrediction]]:
-        img = cv2.imread(image_path)
+    def predict(self, image_path: Union[Image, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
+        if type(image_path) == str:
+            img = image.image_utils.load_img(image_path, target_size=(224, 224))
+        else:
+            img = image.image_utils.img_to_array(image_path)
         resize = t.image.resize(img, [256, 256])
 
-        yhat = self.model.predict(n.expand_dims(resize/255, axis=0))
+        preds = self.model.predict(n.expand_dims(resize/255, axis=0))
         
+        if not_decoded:
+            return preds
+
         predictions = []
-        for i, clase in enumerate(yhat[0]):
+        for i, clase in enumerate(preds[0]):
             predictions.append(ModelPrediction(self.CLASES[i], str(round(clase * 100,2))))
 
-        result_index = n.argmax(yhat)
-        result = ModelPrediction(self.CLASES[result_index], str(round(yhat[0][result_index]*100,2)))
+        result_index = n.argmax(preds)
+        result = ModelPrediction(self.CLASES[result_index], str(round(preds[0][result_index]*100,2)))
 
         return [result, predictions]
     
+    def get_label(self, class_str: str) -> Tensor:
+
+        class_index = getSignalModelLabelsToIndex()[class_str]
+        label = tf.one_hot(class_index, len(self.CLASES))
+        label = tf.reshape(label, (1, len(self.CLASES)))
+
+        return label
+    
+    def get_model(self) -> t.keras.models.Model:
+        return self.model

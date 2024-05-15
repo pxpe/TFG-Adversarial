@@ -4,13 +4,17 @@
 
 
 from model_loader.model_utils.model_predictions import ModelPrediction
+from model_loader.model_utils.model_labels import getImageNetLabelsToIndex
 
 from ..model_interface import ModelInterface
 
+import tensorflow as tf
 from keras.preprocessing import image
 from keras.applications.mobilenet_v2 import MobileNetV2
 from keras.applications.mobilenet_v2 import preprocess_input
 from keras.applications.mobilenet_v2 import decode_predictions
+from tensorflow import Tensor
+
 import numpy as n
 
 from typing import Union
@@ -26,18 +30,35 @@ class ModelMobileNetV2(ModelInterface):
     """
 
     def __init__(self) -> None:
-        self.model = MobileNetV2(include_top=True, weights='imagenet')
+        self.model = MobileNetV2(include_top=True, weights='imagenet', classes=1000)
         self.model_name = "MobileNetV2"
 
     def get_name(self) -> str:
         return self.model_name
     
-    def predict(self, image_path: Union[Image, str]) -> tuple[ModelPrediction,list[ModelPrediction]]:
-        img = image.image_utils.load_img(image_path, target_size=(224, 224))
-        img = image.image_utils.img_to_array(img)
+    def predict(self, image_path: Union[Image, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
+        if type(image_path) == str:
+            img = image.image_utils.load_img(image_path, target_size=(224, 224))
+            img = image.image_utils.img_to_array(img)
+            img = preprocess_input(n.expand_dims(img, axis=0))
+        else:
+            img = image_path
 
-        x = preprocess_input(n.expand_dims(img, axis=0))
-        preds = self.model.predict(x)
+        if not_decoded:
+            return self.model(img)
+
+        preds = self.model.predict(img)
+
         decoded_preds = decode_predictions(preds, top=5)[0]
         return [ModelPrediction(decoded_preds[0][1],str(round(decoded_preds[0][2] * 100,2))) , [ModelPrediction(p[1],str(round(p[2]*100,2))) for p in decoded_preds]]
     
+    def get_label(self, class_str: str) -> Tensor:
+        class_str = class_str.replace("_", " ")
+        class_index = getImageNetLabelsToIndex()[class_str]
+        label = tf.one_hot(class_index, 1000)
+        label = tf.reshape(label, (1, 1000))
+
+        return label
+    
+    def get_model(self) -> MobileNetV2:
+        return self.model

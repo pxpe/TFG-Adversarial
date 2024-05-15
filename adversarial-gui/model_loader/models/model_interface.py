@@ -6,6 +6,8 @@ from model_loader.model_utils.model_predictions import ModelPrediction
 
 from typing import Union
 from PIL.Image import Image
+from tensorflow import Tensor
+import numpy as n
 
 class ModelInterface():
     """
@@ -24,9 +26,36 @@ class ModelInterface():
         """
         pass
 
-    def predict(self, image_path: Union[Image, str]) -> tuple[ModelPrediction,list[ModelPrediction]]:
+    def predict(self, image_path: Union[Image, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
         """
             Realiza una predicción sobre una imagen.
+            Parametros:
+            -    image_path (Union[Image, str]): Ruta de la imagen o imagen.
+            -    default_mode (bool): Modo por defecto.
+
+            Retorna:
+            Si default_mode es True:
+            -    ModelPrediction: Predicción del modelo estandar.
+            Si default_mode es False:
+            -    tuple[ModelPrediction,list[ModelPrediction]]: Predicción del modelo y lista de predicciones.
+
         """
         pass
 
+    def get_label(self, class_str: str) -> Tensor:
+        """
+            Obtiene la etiqueta de una clase.
+            Parametros:
+            -    class_str (str): Nombre de la clase.
+
+            Retorna:
+            -    Tensor: Etiqueta de la clase.
+        """
+        pass
+
+
+    def get_model(self) -> object:
+        """
+            Devuelve el modelo.
+        """
+        pass

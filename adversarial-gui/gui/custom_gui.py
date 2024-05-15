@@ -15,7 +15,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from PIL import Image
 
 from model_loader.loader import ModelLoader
-from ..adversarial_attacks.FGSM import FGSMAttack
+from adversarial_attacks.FGSM import FGSMAttack
 from model_loader.model_utils.model_predictions import generate_prediction_graph
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -42,7 +42,7 @@ class AversarialGUI(customtkinter.CTk):
 
     ATAQUES_DISPONIBLES = ["N/A","FGSM"]
 
-    def __init__(self, title : str = "Adversarial GUI",geometry : str = "1100x580", font_family : str = "Consolas", modelLoader : ModelLoader = None):
+    def __init__(self, title : str = "Adversarial GUI",geometry : str = "1200x680", font_family : str = "Consolas", modelLoader : ModelLoader = None):
         super().__init__()
         
         self.title_str = title
@@ -159,6 +159,9 @@ class AversarialGUI(customtkinter.CTk):
             self.sidebar_attack_params.destroy()
         except AttributeError:
             pass
+
+    def __limpiar_img_display_frame(self):
+        self.img_display_frame.destroy()
         
 
     def __mostrar_fgsm_params(self):
@@ -204,40 +207,64 @@ class AversarialGUI(customtkinter.CTk):
    
 
     def __predecir_fgsm(self):
-        epsilon = self.fgsm_epsilon.get()
+        epsilon = self.fgsm_epsilon.get().replace(',', '.').strip()
 
-        if not epsilon or type(epsilon) not in [int, float]:
-            messagebox.showerror("Error", "El valor de epsilon es incorrecto.")
+        try:
+            epsilon = float(epsilon)
+        except ValueError:
+            messagebox.showerror("Error", "El valor de epsilon es incorrecto. " + epsilon)
             return
         
-        epsilon = float(epsilon)
         
         prediccion_real = self.model_loader.predict(self.current_image)
-        fig1, ax1 = generate_prediction_graph(prediccion_real[1])
+        fig1, _ = generate_prediction_graph(prediccion_real[1])
 
-        
-        fgsm = FGSMAttack(self.current_image, epsilon = epsilon, model = self.model_loader)
+        try:
+            label = self.model_loader.get_label(prediccion_real[0].predicted_class)
+        except KeyError:
+            messagebox.showerror("Error", "No se ha podido obtener la etiqueta de la predicción real.")
+            return
+
+        label = self.model_loader.get_label(prediccion_real[0].predicted_class)
+
+        fgsm = FGSMAttack(self.current_image, epsilon = epsilon,input_label = label, model = self.model_loader)
 
         perturbacion = fgsm.get_adversarial_pattern()
         imagen_adversaria = fgsm.get_adversarial_image()
 
         prediccion_adversaria = self.model_loader.predict(imagen_adversaria)
-        fig2, ax2 = generate_prediction_graph(prediccion_adversaria[1])
+        fig2, _ = generate_prediction_graph(prediccion_adversaria[1])
+
+        original_array = fgsm.get_source_image().numpy()
+        img_original = Image.fromarray(original_array[0].astype("uint8"))
+
+        perturbacion_array = perturbacion.numpy()
+        img_perturbacion = Image.fromarray(perturbacion_array[0].astype("uint8"))
 
 
-        self.result_frame = customtkinter.CTkFrame(self.content_frame, corner_radius=20)
-        self.result_frame.grid(row=2, column=0, padx=20, pady=0, sticky="ew")
+        adversarial_array = imagen_adversaria.numpy()
+        img_adversaria = Image.fromarray(adversarial_array[0].astype("uint8"))
+
+
+        # Configurar el frame de resultados
+        
+        # Limpiar el content_frame
+        self.__limpiar_img_display_frame()
+
+        self.result_frame = customtkinter.CTkFrame(self.content_frame,width=400, height=400, corner_radius=20)
+        self.result_frame.grid(row=2, column=0, padx=15, pady=15, sticky="ew")
         self.result_frame.grid_rowconfigure(1, weight=0)
-        self.result_frame.grid_columnconfigure(3, weight=0)
+        self.result_frame.grid_columnconfigure(3, weight=1)
 
-        self.real_result = AdversarialResult(self.result_frame, width=200, height=200, image=fgsm.get_source_image(), descripcion="Imagen original", step_size=0, grafico=fig1, font_family=self.font_family)
-        self.real_result.grid(row=0, column=0, padx=0, pady=0)
 
-        self.perturbacion_result = AdversarialResult(self.result_frame, width=200, height=200, image=perturbacion, descripcion="Perturbación", step_size=epsilon, grafico=None, font_family=self.font_family)
-        self.perturbacion_result.grid(row=0, column=1, padx=0, pady=0)
+        self.real_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_original, descripcion="Imagen original", prediccion=prediccion_real, step_size=0, grafico=fig1, font_family=self.font_family)
+        self.real_result.grid(row=0, column=0, padx=15, pady=15)
 
-        self.adversarial_result = AdversarialResult(self.result_frame, width=200, height=200, image=imagen_adversaria, descripcion=f"Imagen adversaria con epsilon = {epsilon}", step_size=epsilon, grafico=fig2, font_family=self.font_family)
-        self.adversarial_result.grid(row=0, column=2, padx=0, pady=0)
+        self.perturbacion_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_perturbacion, descripcion="Perturbación", grafico=None, font_family=self.font_family)
+        self.perturbacion_result.grid(row=0, column=1, padx=15, pady=15)
+
+        self.adversarial_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria,prediccion=prediccion_adversaria, descripcion=f"Imagen adversaria con epsilon = {epsilon}", grafico=fig2, font_family=self.font_family)
+        self.adversarial_result.grid(row=0, column=2, padx=15, pady=15)
 
 
 

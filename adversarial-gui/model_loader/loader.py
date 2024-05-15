@@ -9,9 +9,12 @@ from model_loader.models.implementations.ResNet50 import ModelResNet50
 from model_loader.models.implementations.SignalModel import ModelSignalModel
 from model_loader.models.implementations.MobileNetV2 import ModelMobileNetV2
 
+from tensorflow import Tensor
+
 from typing import Union
 from PIL.Image import Image
 
+import numpy as n
 
 class ModelLoader(): 
 
@@ -69,14 +72,34 @@ class ModelLoader():
 
 
 
-    def predict(self, image: Union[Image, str]) -> tuple[ModelPrediction,list[ModelPrediction]]:
+    def predict(self, image_path: Union[Image, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
         """
             Realiza una predicción sobre una imagen usando el modelo cargado.
             Parametros:	
-            -    image (str): Ruta de la imagen a predecir.
+            -    image_path (str | Image: Ruta de la imagen a predecir.
         """
         if self.model is None:
             raise ModelNotLoadedException()
         else:
-            return self.model.predict(image)
-        
+            return self.model.predict(image_path=image_path, not_decoded=not_decoded)
+    
+
+    def get_label(self, class_str: str) -> Tensor:
+        """
+            Obtiene la etiqueta de una clase.
+            Parametros:
+            -    clase (str): Nombre de la clase.
+        """
+        if self.model is None:
+            raise ModelNotLoadedException()
+        else:
+            return self.model.get_label(class_str)
+    
+    def get_model(self) -> object:
+        """
+            Obtiene el modelo de red neuronal cargado.
+        """
+        if self.model is None:
+            raise ModelNotLoadedException()
+        else:
+            return self.model.get_model()
