@@ -234,13 +234,13 @@ class AversarialGUI(customtkinter.CTk):
         
         from matplotlib import pyplot as plt
 
-        plt.figure()
-        plt.imshow(imagen_adversaria[0])
-        plt.show()
+        # plt.figure()
+        # plt.imshow(imagen_adversaria[0])
+        # plt.show()
 
-        plt.figure()
-        plt.imshow(imagen_adversaria[0])
-        plt.show()
+        # plt.figure()
+        # plt.imshow(imagen_adversaria[0])
+        # plt.show()
 
         prediccion_adversaria = self.model_loader.predict(imagen_adversaria)
         fig2, _ = generate_prediction_graph(prediccion_adversaria[1])
