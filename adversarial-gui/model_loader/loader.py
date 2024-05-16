@@ -5,7 +5,7 @@
 from model_loader.model_utils.model_exceptions import InvadidModelName, ModelNotLoadedException
 from model_loader.model_utils.model_predictions import ModelPrediction
 
-from model_loader.models.implementations.ResNet50 import ModelResNet50
+from model_loader.models.implementations.ResNet50V2 import ModelResNet50V2
 from model_loader.models.implementations.SignalModel import ModelSignalModel
 from model_loader.models.implementations.MobileNetV2 import ModelMobileNetV2
 
@@ -18,9 +18,9 @@ import numpy as n
 
 class ModelLoader(): 
 
-    def __init__(self, default_model: str = "ResNet50"): 
+    def __init__(self, default_model: str = "ResNet50 V2"): 
         """
-            Inicializa el cargador de modelos, instanciando ResNet50.
+            Inicializa el cargador de modelos, instanciando ResNet50 V2.
             Parametros:	
             -    default_model (str): Nombre del modelo por defecto a cargar.
         """
@@ -41,13 +41,13 @@ class ModelLoader():
         if not str_model:
             raise InvadidModelName(model_name=str_model)
         
-        if str_model == "ResNet50": 
-            self.model = ModelResNet50()
+        if str_model == "ResNet50 V2": 
+            self.model = ModelResNet50V2()
 
         elif str_model == "SignalModel":
             self.model = ModelSignalModel()
 
-        elif str_model == "MobileNetV2":
+        elif str_model == "MobileNet V2":
             self.model = ModelMobileNetV2()
 
         else:

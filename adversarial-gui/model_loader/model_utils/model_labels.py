@@ -1020,4 +1020,4 @@ def getImageNetLabels():
 
 def getImageNetLabelsToIndex():
     image_net_labels = getImageNetLabels()
-    return {v: k for k, v in image_net_labels.items()}
+    return { (v.split(',')[0] if ',' in v else v) : k for k, v in image_net_labels.items()}

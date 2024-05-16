@@ -31,7 +31,7 @@ class ModelMobileNetV2(ModelInterface):
 
     def __init__(self) -> None:
         self.model = MobileNetV2(include_top=True, weights='imagenet', classes=1000)
-        self.model_name = "MobileNetV2"
+        self.model_name = "MobileNet V2"
 
     def get_name(self) -> str:
         return self.model_name
@@ -59,8 +59,9 @@ class ModelMobileNetV2(ModelInterface):
         return tf.image.resize(image, [224, 224])
 
     def get_label(self, class_str: str) -> Tensor:
-        class_str = class_str.replace("_", " ")
-        class_index = getImageNetLabelsToIndex()[class_str]
+        model_labels = getImageNetLabelsToIndex()
+        class_str = class_str.replace('_', ' ')
+        class_index = model_labels[class_str]
         label = tf.one_hot(class_index, 1000)
         label = tf.reshape(label, (1, 1000))
 

@@ -11,6 +11,7 @@ from customtkinter import filedialog, CTkInputDialog
 from .custom_widgets.ctk_adversarial_result import AdversarialResult
 from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib import pyplot as plt
 
 from PIL import Image
 
@@ -38,7 +39,7 @@ class AversarialGUI(customtkinter.CTk):
         "Claro": "Light"
     }
 
-    MODELOS_DISPONIBLES = [ "ResNet50", "SignalModel", "MobileNetV2"]
+    MODELOS_DISPONIBLES = [ "ResNet50 V2", "SignalModel", "MobileNet V2"]
 
     ATAQUES_DISPONIBLES = ["N/A","FGSM"]
 
@@ -118,10 +119,11 @@ class AversarialGUI(customtkinter.CTk):
 
  
     def __instanciar_widgets_imagen(self):
-       
+        self.__limpiar_contenido()
+        
         # Configurar el frame de visualización de imagen
         self.img_display_frame = customtkinter.CTkFrame(self.content_frame, corner_radius=20)
-        self.img_display_frame.grid(row=1, column=0, padx=20, pady=0, sticky="ew")
+        self.img_display_frame.grid(row=1, column=0, padx=20, pady=(0,50), sticky="ew")
         self.img_display_frame.grid_rowconfigure(1, weight=0)
         self.img_display_frame.grid_columnconfigure(1, weight=0)
 
@@ -160,8 +162,14 @@ class AversarialGUI(customtkinter.CTk):
         except AttributeError:
             pass
 
-    def __limpiar_img_display_frame(self):
-        self.img_display_frame.destroy()
+    def __limpiar_contenido(self):
+        try:
+            for widget in self.content_frame.winfo_children():
+                if widget != self.img_search_frame:
+                    widget.destroy()
+        except AttributeError:
+            pass
+
         
 
     def __mostrar_fgsm_params(self):
@@ -222,7 +230,7 @@ class AversarialGUI(customtkinter.CTk):
         try:
             label = self.model_loader.get_label(prediccion_real[0].predicted_class)
         except KeyError:
-            messagebox.showerror("Error", "No se ha podido obtener la etiqueta de la predicción real.")
+            messagebox.showerror("Error", f"No se ha podido obtener la etiqueta de la predicción real ( {str(prediccion_real[0].predicted_class)} )")
             return
 
         label = self.model_loader.get_label(prediccion_real[0].predicted_class)
@@ -230,17 +238,7 @@ class AversarialGUI(customtkinter.CTk):
         fgsm = FGSMAttack(self.current_image, epsilon = epsilon,input_label = label, model = self.model_loader)
 
         perturbacion = fgsm.get_adversarial_pattern()
-        imagen_adversaria = fgsm.get_adversarial_image()
-        
-        from matplotlib import pyplot as plt
-
-        # plt.figure()
-        # plt.imshow(imagen_adversaria[0])
-        # plt.show()
-
-        # plt.figure()
-        # plt.imshow(imagen_adversaria[0])
-        # plt.show()
+        imagen_adversaria = fgsm.get_adversarial_image()        
 
         prediccion_adversaria = self.model_loader.predict(imagen_adversaria)
         fig2, _ = generate_prediction_graph(prediccion_adversaria[1])
@@ -255,9 +253,7 @@ class AversarialGUI(customtkinter.CTk):
         img_adversaria = Image.fromarray(((adversarial_array[0] + 1) * 127.5).astype("uint8"))
 
         # Configurar el frame de resultados
-        
-        # Limpiar el content_frame
-        self.__limpiar_img_display_frame()
+        self.__limpiar_contenido()
 
         self.result_frame = customtkinter.CTkFrame(self.content_frame,width=400, height=400, corner_radius=20)
         self.result_frame.grid(row=2, column=0, padx=15, pady=15, sticky="ew")
