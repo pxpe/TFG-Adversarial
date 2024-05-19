@@ -18,6 +18,7 @@ from PIL import Image
 
 from model_loader.loader import ModelLoader
 from adversarial_attacks.FGSM import FGSMAttack
+from adversarial_attacks.adversarial_patch import AdversarialPatch
 from model_loader.model_utils.model_predictions import generate_prediction_graph
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -40,7 +41,7 @@ class AversarialGUI(customtkinter.CTk):
         "Claro": "Light"
     }
 
-    MODELOS_DISPONIBLES = [ "ResNet50 V2", "SignalModel", "MobileNet V2"]
+    MODELOS_DISPONIBLES = [ "ResNet50 V2", "SignalModel", "MobileNet V2", "VGG19"]
 
     ATAQUES_DISPONIBLES = ["N/A","FGSM","Parche Adversario"]
 
@@ -298,6 +299,67 @@ class AversarialGUI(customtkinter.CTk):
 
         self.adversarial_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria,prediccion=prediccion_adversaria, descripcion=f"Imagen adversaria con epsilon = {epsilon}", grafico=fig2, font_family=self.font_family)
         self.adversarial_result.grid(row=0, column=2, padx=15, pady=15)
+
+
+    def __predecir_parche(self):
+        target_class = self.patch_target_class.get_selected()
+        print(target_class)
+        if target_class is None:
+            messagebox.showerror("Error", "No se ha seleccionado una clase objetivo.")
+            return
+        
+        try:
+            target_class = int(target_class)
+        except ValueError:
+            messagebox.showerror("Error", "La clase objetivo no es válida.")
+            return
+        
+        prediccion_real = self.model_loader.predict(self.current_image)
+        fig1, _ = generate_prediction_graph(prediccion_real[1])
+
+        try:
+            patch = AdversarialPatch(self.current_image, target_class, self.model_loader)
+        except Exception as e:
+            messagebox.showerror("Error", f"No se ha podido generar el parche adversario. Vuelve a intentarlo.")
+            return
+
+        original_img = patch.get_source_image()
+        
+        adversarial_image = patch.get_adversarial_image()
+        adversarial_prediction = self.model_loader.predict(adversarial_image)
+
+        parche_adversario = patch.get_adversarial_patch()
+
+        fig2, _ = generate_prediction_graph(adversarial_prediction[1])
+
+        original_array = original_img.numpy()
+        img_original = Image.fromarray(((original_array[0] + 1) * 127.5).astype("uint8"))
+
+
+        adversarial_array = adversarial_image.numpy()
+        img_adversaria = Image.fromarray(((adversarial_array[0] + 1) * 127.5).astype("uint8"))
+
+        adversarial_patch = Image.fromarray(((parche_adversario + 1) * 127.5).astype("uint8"))
+
+        # Configurar el frame de resultados
+        self.__limpiar_contenido()
+
+        self.result_frame = customtkinter.CTkFrame(self.content_frame,width=400, height=400, corner_radius=20)
+        self.result_frame.grid(row=2, column=0, padx=15, pady=15, sticky="ew")
+        self.result_frame.grid_rowconfigure(1, weight=0)
+        self.result_frame.grid_columnconfigure(3, weight=1)
+
+        self.real_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_original, descripcion="Imagen original", prediccion=prediccion_real, step_size=0, grafico=fig1, font_family=self.font_family)
+        self.real_result.grid(row=0, column=0, padx=15, pady=15)
+
+        self.perturbacion_result = AdversarialResult(self.result_frame, width=150, height=180, image=adversarial_patch, descripcion="Parche adversario", grafico=None, font_family=self.font_family)
+        self.perturbacion_result.grid(row=0, column=1, padx=15, pady=15)
+
+        self.adversarial_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria,prediccion=adversarial_prediction, descripcion=f"Imagen adversaria con parche adversario", grafico=fig2, font_family=self.font_family)
+        self.adversarial_result.grid(row=0, column=2, padx=15, pady=15)
+
+
+
 
 
 

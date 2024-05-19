@@ -36,33 +36,32 @@ class AdversarialPatch():
     MEAN = tf.constant([0.485, 0.456, 0.406])
     STD = tf.constant([0.229, 0.224, 0.225])
 
-    LEARNING_RATE = 0.1
-    ITERATIONS = 1
+    LEARNING_RATE = 0.2
+    ITERATIONS = 5 if not tf.test.is_gpu_available() else 50
 
     def __init__(self, source_image_path: str, target_class_label : int, model : ModelInterface, patch_size : int = 50) -> None:
         self.model = model
-        self.source_image = self.__preprocess_image(source_image_path)
 
         self.target_class_label = target_class_label
 
         self.patch_size = patch_size
-        self.adversarial_patch = n.random.rand(patch_size, patch_size, 3) # Inicializar el parche con ruido aleatorio
-        self.adversarial_patch = tf.Variable(self.adversarial_patch, dtype=tf.float32)
-        self.PATCH_CENTER = (n.random.randint(0, 224), n.random.randint(0, 224))
-
+        self.patch_center = (n.random.randint(0, 224), n.random.randint(0, 224))
 
         self.optimizer = tf.optimizers.Adam(self.LEARNING_RATE)
 
-        self.PREPROCESSING = {'mean': self.MEAN, 'std': self.STD}
-        self.loss_object = tf.keras.losses.CategoricalCrossentropy()
+        self.PREPROCESSING = {'mean': self.MEAN, 'std': self.STD}   
+        self.source_image = self.__preprocess_image(source_image_path)
+
         self.pretrained_model = model.get_model()
         
         # Convertir el modelo de Keras a un modelo compatible con Foolbox
         self.fmodel = fb.TensorFlowModel(self.pretrained_model, bounds=(0, 1), preprocessing=self.PREPROCESSING)
         
-        self.__generate_adversarial_patch()
+        self.adversarial_patch = self.__generate_adversarial_patch()
+
         self.adversarial_image = self.__generate_adversarial_image()
-        self.__save_adversarial_image()
+
+        self.__save_adversarial_patch()
 
     def __preprocess_image(self, image_path: str) -> Tensor:
         image_raw = tf.io.read_file(image_path)
@@ -78,6 +77,7 @@ class AdversarialPatch():
 
     # Función para aplicar el parche a la imagen
     def __apply_patch(self, image, patch, center):
+
         patch_shape = tf.shape(patch)
         start_x = center[0] - patch_shape[0] // 2
         start_y = center[1] - patch_shape[1] // 2
@@ -93,36 +93,46 @@ class AdversarialPatch():
         patched_image = image * (1 - mask) + mask
         return patched_image
         
-    def __generate_adversarial_patch(self):
+    def __generate_adversarial_patch(self) -> Tensor:
+        patch = n.random.rand(self.patch_size, self.patch_size, 3) # Inicializar el parche con ruido aleatorio
+        patch = tf.Variable(patch, dtype=tf.float32)
+
         for i in range(self.ITERATIONS):
             with tf.GradientTape() as tape:
-                tape.watch(self.adversarial_patch)
-                patched_image = self.__apply_patch(self.source_image, self.adversarial_patch, self.PATCH_CENTER)
+                tape.watch(patch)
+                patched_image = self.__apply_patch(self.source_image, patch, self.patch_center)
                 preds = self.fmodel(patched_image)
                 loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=[self.target_class_label], logits=preds)
-            
-            grads = tape.gradient(loss, self.adversarial_patch)
+            grads = tape.gradient(loss, patch)
             if grads is not None:
-                self.optimizer.apply_gradients([(grads, self.adversarial_patch)])
+                self.optimizer.apply_gradients([(grads, patch)])
             else:
                 print('No se encontraron gradientes.')
             
             # Clip del parche para mantenerlo en el rango válido
-            self.adversarial_patch.assign(tf.clip_by_value(self.adversarial_patch, -3, 3))  # Ajusta según el rango de tu imagen preprocesada
+            patch.assign(tf.clip_by_value(patch, -3, 3))  # Ajusta según el rango de tu imagen preprocesada
             
             print(f'Iteración {i}, Pérdida: {n.mean(loss.numpy())}')
     
+        return patch
     
     def __generate_adversarial_image(self) -> Tensor:
-        self.adversarial_image = self.__apply_patch(self.source_image, self.adversarial_patch, self.PATCH_CENTER)
+        return self.__apply_patch(self.source_image, self.adversarial_patch, self.patch_center)
 
-    def __save_adversarial_image(self) -> None:
-        image = self.adversarial_image.numpy()
-        image = image[0]
-        image = image * 255
-        image = image.astype(n.uint8)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        cv2.imwrite(os.path.join('generated_patches',f'{self.model.get_name()}:{self.target_class_label}'), image)
+    def __save_adversarial_patch(self) -> None:
+        if self.adversarial_image is None:
+            raise ValueError('No se ha generado la imagen adversaria.')
+
+        image = self.get_adversarial_patch()
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)  # Asignar la conversión a la variable
+        
+        # Asegurarse de que el directorio exista
+
+        os.makedirs(os.path.join('adversarial_attacks','generated_patches'), exist_ok=True)
+        
+        patch_path = os.path.join('adversarial_attacks','generated_patches', f'{self.model.get_name()}_{self.target_class_label}.png')
+        
+        cv2.imwrite(patch_path, image, [int(cv2.IMWRITE_PNG_COMPRESSION), 9])
 
     def get_adversarial_image(self) -> Tensor:
         return self.adversarial_image

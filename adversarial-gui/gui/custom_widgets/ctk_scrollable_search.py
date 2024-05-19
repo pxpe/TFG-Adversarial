@@ -27,7 +27,6 @@ class ScrollableSearch(customtkinter.CTkFrame):
         # Combobox que muestra los resultados de la búsqueda
         self.combo_box = customtkinter.CTkComboBox(self, values=list(self.entries.keys()), dropdown_fg_color='#515151')
         self.combo_box.pack(fill="x", expand=True, padx=10, pady=(10, 5))
-        self.combo_box.bind("<<ComboboxSelected>>", self.on_combobox_selected)
 
     def on_search_entry_key_release(self, event):
         # Filtrar las entradas basadas en el texto de búsqueda
@@ -39,7 +38,5 @@ class ScrollableSearch(customtkinter.CTkFrame):
         else:
             self.combo_box.set('')
 
-    def on_combobox_selected(self, event):
-        selected = self.combo_box.get()
-        if selected:
-            print(f"Selected: {selected} ({self.entries[selected]})")
+    def get_selected(self):
+        return self.entries[self.combo_box.get()]

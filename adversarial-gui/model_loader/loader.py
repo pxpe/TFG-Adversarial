@@ -8,6 +8,7 @@ from model_loader.model_utils.model_predictions import ModelPrediction
 from model_loader.models.implementations.ResNet50V2 import ModelResNet50V2
 from model_loader.models.implementations.SignalModel import ModelSignalModel
 from model_loader.models.implementations.MobileNetV2 import ModelMobileNetV2
+from model_loader.models.implementations.VGG19 import ModelVGG19
 
 from tensorflow import Tensor
 
@@ -49,6 +50,9 @@ class ModelLoader():
 
         elif str_model == "MobileNet V2":
             self.model = ModelMobileNetV2()
+        
+        elif str_model == "VGG19":
+            self.model = ModelVGG19()
 
         else:
             raise InvadidModelName(model_name=str_model)
@@ -132,3 +136,12 @@ class ModelLoader():
             raise ModelNotLoadedException()
         else:
             return self.model.get_model()
+    
+    def get_name(self) -> str:
+        """
+            Obtiene el nombre del modelo de red neuronal cargado.
+        """
+        if self.model is None:
+            raise ModelNotLoadedException()
+        else:
+            return self.model.get_name()

@@ -34,8 +34,8 @@ def generate_prediction_graph(model_predictions : List[ModelPrediction]) -> tupl
     model_predictions = model_predictions[:4]
 
     fig, ax = plt.subplots(figsize=(3, 2))
-    # ponemos las etiquetas de las barras con tamaño 6
-    ax.tick_params(labelsize=6)
+    # ponemos las etiquetas de las barras con tamaño 5
+    ax.tick_params(labelsize=5)
 
 
     labels = [prediction.predicted_class for prediction in model_predictions]
