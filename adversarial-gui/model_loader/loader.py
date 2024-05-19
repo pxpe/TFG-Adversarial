@@ -114,6 +114,15 @@ class ModelLoader():
             raise ModelNotLoadedException()
         else:
             return self.model.get_label(class_str)
+        
+    def get_classes(self) -> dict:
+        """
+            Obtiene las clases del modelo: { str(class_name) : int(class_id) }.
+        """
+        if self.model is None:
+            raise ModelNotLoadedException()
+        else:
+            return self.model.get_classes()
     
     def get_model(self) -> object:
         """

@@ -90,5 +90,8 @@ class ModelSignalModel(ModelInterface):
 
         return label
     
+    def get_classes(self) -> list[str]:
+        return getSignalModelLabelsToIndex()
+
     def get_model(self) -> t.keras.Model:
         return self.model

@@ -68,5 +68,8 @@ class ModelResNet50V2(ModelInterface):
 
         return label
     
+    def get_classes(self) -> list[str]:
+        return getImageNetLabelsToIndex()
+    
     def get_model(self) -> ResNet50V2:
         return self.model

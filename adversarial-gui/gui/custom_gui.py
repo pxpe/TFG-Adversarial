@@ -9,6 +9,7 @@ from time import time
 import customtkinter
 from customtkinter import filedialog, CTkInputDialog
 from .custom_widgets.ctk_adversarial_result import AdversarialResult
+from .custom_widgets.ctk_scrollable_search import ScrollableSearch
 from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import pyplot as plt
@@ -41,7 +42,7 @@ class AversarialGUI(customtkinter.CTk):
 
     MODELOS_DISPONIBLES = [ "ResNet50 V2", "SignalModel", "MobileNet V2"]
 
-    ATAQUES_DISPONIBLES = ["N/A","FGSM"]
+    ATAQUES_DISPONIBLES = ["N/A","FGSM","Parche Adversario"]
 
     def __init__(self, title : str = "Adversarial GUI",geometry : str = "1200x680", font_family : str = "Consolas", modelLoader : ModelLoader = None):
         super().__init__()
@@ -78,7 +79,7 @@ class AversarialGUI(customtkinter.CTk):
         self.sidebar_model_label = customtkinter.CTkLabel(self.sidebar_frame, text="Modelo:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
         self.sidebar_model_label.grid(row=1, column=0, padx=15, pady=0, sticky="ew")
 
-        self.sidebar_model = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=self.MODELOS_DISPONIBLES, command= lambda model: self.model_loader.switch_model(model))
+        self.sidebar_model = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=self.MODELOS_DISPONIBLES, command= lambda model: self.__cambiar_modelo(model))
         self.sidebar_model.grid(row=2, column=0, sticky="ew", padx=15, pady=0)
 
         self.sidebarl_attack_label = customtkinter.CTkLabel(self.sidebar_frame, text="Ataque:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
@@ -184,6 +185,18 @@ class AversarialGUI(customtkinter.CTk):
         self.fgsm_epsilon = customtkinter.CTkEntry(self.sidebar_attack_params, font=customtkinter.CTkFont(family=self.font_family, size=12), width=10, placeholder_text="0.1")
         self.fgsm_epsilon.grid(row=0, column=1, sticky="ew",padx=15, pady=15)
 
+    def __mostrar_parche_params(self):
+
+        self.sidebar_attack_params = customtkinter.CTkFrame(self.sidebar_frame, corner_radius=10)
+        self.sidebar_attack_params.grid(row=5, column=0, sticky="ew",padx=10, pady=15)
+        self.sidebar_attack_params.grid_rowconfigure(1, weight=1)
+
+        self.patch_class_label = customtkinter.CTkLabel(self.sidebar_attack_params, text="Clase Objetivo:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
+        self.patch_class_label.grid(row=0, column=0, sticky="ew",padx=15, pady=(5,0))
+
+        self.patch_target_class = ScrollableSearch(self.sidebar_attack_params, entries=self.model_loader.get_classes())
+        self.patch_target_class.grid(row=1, column=0, sticky="ew",padx=15, pady=(5,15))
+
 
     def __mostrar_imagen(self):
         """
@@ -196,13 +209,29 @@ class AversarialGUI(customtkinter.CTk):
         """
             Método que cambia el ataque a realizar sobre la imagen cargada.
         """
+        self.__limpiar_attack_params()
+ 
+
         if attack == "N/A":
             self.attack = None
-            self.__limpiar_attack_params()
-        if attack == "FGSM":
+        else:
             self.attack = attack
-            self.__mostrar_fgsm_params()
+            if attack == "FGSM":
+                self.__mostrar_fgsm_params()
+            elif attack == "Parche Adversario":
+                self.__mostrar_parche_params()
     
+    def __cambiar_modelo(self, model : str) -> None:
+        """
+            Método que cambia el modelo de red neuronal a utilizar.
+        """
+        self.model_loader.switch_model(model)
+        self.__limpiar_attack_params()
+        self.attack = None
+        self.sidebar_attack.set("N/A")
+        messagebox.showinfo("Información", f"Modelo cambiado a {model}")
+
+
     def __cambiar_tema(self, theme : str) -> None:
         """
             Método que cambia el tema de la interfaz gráfica.
@@ -310,6 +339,8 @@ class AversarialGUI(customtkinter.CTk):
         else:
             if self.attack == "FGSM":
                 self.__predecir_fgsm()
+            elif self.attack == "Parche Adversario":
+                self.__predecir_parche()
 
 
 

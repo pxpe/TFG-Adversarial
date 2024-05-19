@@ -67,5 +67,8 @@ class ModelMobileNetV2(ModelInterface):
 
         return label
     
+    def get_classes(self) -> list[str]:
+        return getImageNetLabelsToIndex()
+
     def get_model(self) -> MobileNetV2:
         return self.model
