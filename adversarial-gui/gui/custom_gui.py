@@ -15,6 +15,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import pyplot as plt
 
 from PIL import Image
+import numpy as np
 
 from model_loader.loader import ModelLoader
 from adversarial_attacks.FGSM import FGSMAttack
@@ -244,6 +245,26 @@ class AversarialGUI(customtkinter.CTk):
             print(f"El tema '{theme}' no está disponible. Los temas disponibles son: {', '.join(self.TEMAS_DISPONIBLES.keys())}")
    
 
+    def __mostrarResultadosAdversarios(self, img_original, img_perturbacion, img_adversaria, prediccion_real, prediccion_adversaria, desc1, desc2, desc3, fig1, fig2):
+        # Configurar el frame de resultados
+        self.__limpiar_contenido()
+
+        self.result_frame = customtkinter.CTkFrame(self.content_frame,width=400, height=400, corner_radius=20)
+        self.result_frame.grid(row=2, column=0, padx=15, pady=15, sticky="ew")
+        self.result_frame.grid_rowconfigure(1, weight=0)
+        self.result_frame.grid_columnconfigure(3, weight=1)
+
+
+        self.real_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_original, descripcion=desc1, prediccion=prediccion_real, step_size=0, grafico=fig1, font_family=self.font_family)
+        self.real_result.grid(row=0, column=0, padx=15, pady=15)
+
+        self.perturbacion_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_perturbacion, descripcion=desc2, grafico=None, font_family=self.font_family)
+        self.perturbacion_result.grid(row=0, column=1, padx=15, pady=15)
+
+        self.adversarial_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria,prediccion=prediccion_adversaria, descripcion=desc3, grafico=fig2, font_family=self.font_family)
+        self.adversarial_result.grid(row=0, column=2, padx=15, pady=15)
+
+
     def __predecir_fgsm(self):
         epsilon = self.fgsm_epsilon.get().replace(',', '.').strip()
 
@@ -267,38 +288,20 @@ class AversarialGUI(customtkinter.CTk):
 
         fgsm = FGSMAttack(self.current_image, epsilon = epsilon,input_label = label, model = self.model_loader)
 
+        imagen_original = fgsm.get_source_image()
         perturbacion = fgsm.get_adversarial_pattern()
         imagen_adversaria = fgsm.get_adversarial_image()        
 
         prediccion_adversaria = self.model_loader.predict(imagen_adversaria)
         fig2, _ = generate_prediction_graph(prediccion_adversaria[1])
-
-        original_array = fgsm.get_source_image().numpy()
-        img_original = Image.fromarray(((original_array[0] + 1) * 127.5).astype("uint8"))
+   
+        img_original = self.model_loader.normalize_image(imagen_original)
         
-        perturbacion_array = perturbacion.numpy()
-        img_perturbacion = Image.fromarray(((perturbacion_array[0] + 1) * 127.5).astype("uint8"))
+        img_perturbacion = self.model_loader.normalize_image(perturbacion)
 
-        adversarial_array = imagen_adversaria.numpy()
-        img_adversaria = Image.fromarray(((adversarial_array[0] + 1) * 127.5).astype("uint8"))
+        img_adversaria = self.model_loader.normalize_image(imagen_adversaria)
 
-        # Configurar el frame de resultados
-        self.__limpiar_contenido()
-
-        self.result_frame = customtkinter.CTkFrame(self.content_frame,width=400, height=400, corner_radius=20)
-        self.result_frame.grid(row=2, column=0, padx=15, pady=15, sticky="ew")
-        self.result_frame.grid_rowconfigure(1, weight=0)
-        self.result_frame.grid_columnconfigure(3, weight=1)
-
-
-        self.real_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_original, descripcion="Imagen original", prediccion=prediccion_real, step_size=0, grafico=fig1, font_family=self.font_family)
-        self.real_result.grid(row=0, column=0, padx=15, pady=15)
-
-        self.perturbacion_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_perturbacion, descripcion="Perturbación", grafico=None, font_family=self.font_family)
-        self.perturbacion_result.grid(row=0, column=1, padx=15, pady=15)
-
-        self.adversarial_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria,prediccion=prediccion_adversaria, descripcion=f"Imagen adversaria con epsilon = {epsilon}", grafico=fig2, font_family=self.font_family)
-        self.adversarial_result.grid(row=0, column=2, padx=15, pady=15)
+        self.__mostrarResultadosAdversarios(img_original, img_perturbacion, img_adversaria, prediccion_real, prediccion_adversaria, "Imagen original", "Perturbación", f"Imagen adversaria con episilon = {epsilon}" , fig1, fig2)
 
 
     def __predecir_parche(self):
@@ -320,43 +323,25 @@ class AversarialGUI(customtkinter.CTk):
         try:
             patch = AdversarialPatch(self.current_image, target_class, self.model_loader)
         except Exception as e:
-            messagebox.showerror("Error", f"No se ha podido generar el parche adversario. Vuelve a intentarlo.")
+            print(e)
+            messagebox.showerror("Error", f"No se ha podido generar el parche adversario. Vuelve a intentarlo o cambia de clase objetivo.")
             return
 
         original_img = patch.get_source_image()
-        
-        adversarial_image = patch.get_adversarial_image()
-        adversarial_prediction = self.model_loader.predict(adversarial_image)
-
         parche_adversario = patch.get_adversarial_patch()
+        adversarial_image = patch.get_adversarial_image()
+
+        adversarial_prediction = self.model_loader.predict(adversarial_image)
 
         fig2, _ = generate_prediction_graph(adversarial_prediction[1])
 
-        original_array = original_img.numpy()
-        img_original = Image.fromarray(((original_array[0] + 1) * 127.5).astype("uint8"))
+        img_original = self.model_loader.normalize_image(original_img)
+        
+        img_perturbacion = self.model_loader.normalize_patch(parche_adversario)
 
+        img_adversaria = self.model_loader.normalize_image(adversarial_image)
 
-        adversarial_array = adversarial_image.numpy()
-        img_adversaria = Image.fromarray(((adversarial_array[0] + 1) * 127.5).astype("uint8"))
-
-        adversarial_patch = Image.fromarray(((parche_adversario + 1) * 127.5).astype("uint8"))
-
-        # Configurar el frame de resultados
-        self.__limpiar_contenido()
-
-        self.result_frame = customtkinter.CTkFrame(self.content_frame,width=400, height=400, corner_radius=20)
-        self.result_frame.grid(row=2, column=0, padx=15, pady=15, sticky="ew")
-        self.result_frame.grid_rowconfigure(1, weight=0)
-        self.result_frame.grid_columnconfigure(3, weight=1)
-
-        self.real_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_original, descripcion="Imagen original", prediccion=prediccion_real, step_size=0, grafico=fig1, font_family=self.font_family)
-        self.real_result.grid(row=0, column=0, padx=15, pady=15)
-
-        self.perturbacion_result = AdversarialResult(self.result_frame, width=150, height=180, image=adversarial_patch, descripcion="Parche adversario", grafico=None, font_family=self.font_family)
-        self.perturbacion_result.grid(row=0, column=1, padx=15, pady=15)
-
-        self.adversarial_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria,prediccion=adversarial_prediction, descripcion=f"Imagen adversaria con parche adversario", grafico=fig2, font_family=self.font_family)
-        self.adversarial_result.grid(row=0, column=2, padx=15, pady=15)
+        self.__mostrarResultadosAdversarios(img_original, img_perturbacion, img_adversaria, prediccion_real, adversarial_prediction, "Imagen original", "Parche adversario", "Imagen adversaria", fig1, fig2)
 
 
 

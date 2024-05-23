@@ -19,14 +19,18 @@ import numpy as n
 
 from typing import Union
 from PIL.Image import Image
+from PIL import Image as im
 
 from model_loader.model_utils.model_singleton import Singleton
 
 @Singleton
 class ModelVGG19(ModelInterface):
     """
-        Clase que implementa el modelo ResNet50 V2.
+        Clase que implementa el modelo VGG19.
     """
+
+    MEAN = tf.constant([0.485, 0.456, 0.406])
+    STD = tf.constant([0.229, 0.224, 0.225])
 
     def __init__(self) -> None:
         self.model = VGG19(include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None, classes=1000)
@@ -52,11 +56,25 @@ class ModelVGG19(ModelInterface):
         return [ModelPrediction(decoded_preds[0][1],str(round(decoded_preds[0][2] * 100,2))) , [ModelPrediction(p[1],str(round(p[2]*100,2))) for p in decoded_preds]]
     
     def preprocess_image(self, image: Tensor) -> Tensor:
-        return preprocess_input(image)
+        image = image / 255
+        return (tf.convert_to_tensor(image) - self.MEAN) / self.STD
 
+    def normalize_image(self, image: Tensor) -> Image:
+        image = image.numpy()
+        image = (image[0] * self.STD + self.MEAN) * 255
+        image = n.clip(image, 0, 255).astype(n.uint8)
+        image = im.fromarray(image)
+        return image
+    
+    def normalize_patch(self, patch: Tensor) -> Image:
+        image = patch.numpy()
+        image = (patch * self.STD + self.MEAN) * 255
+        image = n.clip(image, 0, 255).astype(n.uint8)
+        image = im.fromarray(image)
+        return image
+    
     def resize_image(self, image: Tensor) -> Tensor:
         return tf.image.resize(image, [224, 224])
-
 
     def get_label(self, class_str: str) -> Tensor:
         model_labels = getImageNetLabelsToIndex()

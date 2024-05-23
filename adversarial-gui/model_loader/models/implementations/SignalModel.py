@@ -18,6 +18,8 @@ import os
 import cv2
 from typing import Union
 from PIL.Image import Image
+from PIL import Image as im
+
 
 import tensorflow as tf
 from tensorflow import Tensor
@@ -78,6 +80,16 @@ class ModelSignalModel(ModelInterface):
         return imagenet_utils.preprocess_input(
             image, data_format=None, mode="tf"
         )
+
+    def normalize_image(self, image: Tensor) -> Image:
+        image = image.numpy()
+        img_original = im.fromarray(((image[0] + 1) * 127.5).astype("uint8"))
+        return img_original
+    
+    def normalize_patch(self, patch: Tensor) -> Image:
+        patch = patch.numpy()
+        img_original = im.fromarray(((patch + 1) * 127.5).astype("uint8"))
+        return img_original
 
     def resize_image(self, image: Tensor) -> Tensor:
         return t.image.resize(image, [256, 256])

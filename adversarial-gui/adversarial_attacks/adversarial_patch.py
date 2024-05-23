@@ -12,6 +12,8 @@ import foolbox as fb
 import os
 from tensorflow import Tensor
 
+from matplotlib import pyplot as plt
+
 class AdversarialPatch():
 
     """
@@ -35,17 +37,17 @@ class AdversarialPatch():
 
     MEAN = tf.constant([0.485, 0.456, 0.406])
     STD = tf.constant([0.229, 0.224, 0.225])
-
-    LEARNING_RATE = 0.2
+    
+    LEARNING_RATE = 0.1
     ITERATIONS = 5 if not tf.test.is_gpu_available() else 50
 
     def __init__(self, source_image_path: str, target_class_label : int, model : ModelInterface, patch_size : int = 50) -> None:
+        
         self.model = model
-
         self.target_class_label = target_class_label
 
         self.patch_size = patch_size
-        self.patch_center = (n.random.randint(0, 224), n.random.randint(0, 224))
+        self.patch_center = (112, 112)
 
         self.optimizer = tf.optimizers.Adam(self.LEARNING_RATE)
 
@@ -55,13 +57,16 @@ class AdversarialPatch():
         self.pretrained_model = model.get_model()
         
         # Convertir el modelo de Keras a un modelo compatible con Foolbox
-        self.fmodel = fb.TensorFlowModel(self.pretrained_model, bounds=(0, 1), preprocessing=self.PREPROCESSING)
+        self.fmodel = fb.TensorFlowModel(self.pretrained_model, bounds=(0, 1), preprocessing=None)
         
-        self.adversarial_patch = self.__generate_adversarial_patch()
+        if os.path.exists(os.path.join('adversarial_attacks','generated_patches', f'{self.model.get_name()}_{self.target_class_label}.png')):
+            self.adversarial_patch = self.__preprocess_image(os.path.join('adversarial_attacks','generated_patches', f'{self.model.get_name()}_{self.target_class_label}.png'))
+        else:
+            self.adversarial_patch = self.__generate_adversarial_patch()
 
         self.adversarial_image = self.__generate_adversarial_image()
 
-        self.__save_adversarial_patch()
+        #self.__save_adversarial_patch()
 
     def __preprocess_image(self, image_path: str) -> Tensor:
         image_raw = tf.io.read_file(image_path)
@@ -76,11 +81,12 @@ class AdversarialPatch():
     
 
     # Función para aplicar el parche a la imagen
-    def __apply_patch(self, image, patch, center):
-
+    def __apply_patch(self,image, patch, center):
+        image_shape = tf.shape(image)
         patch_shape = tf.shape(patch)
         start_x = center[0] - patch_shape[0] // 2
         start_y = center[1] - patch_shape[1] // 2
+
 
         # Create a mask to insert the patch
         mask = tf.zeros_like(image)
@@ -92,7 +98,7 @@ class AdversarialPatch():
 
         patched_image = image * (1 - mask) + mask
         return patched_image
-        
+
     def __generate_adversarial_patch(self) -> Tensor:
         patch = n.random.rand(self.patch_size, self.patch_size, 3) # Inicializar el parche con ruido aleatorio
         patch = tf.Variable(patch, dtype=tf.float32)
@@ -138,9 +144,7 @@ class AdversarialPatch():
         return self.adversarial_image
     
     def get_adversarial_patch(self) -> Tensor:
-        patch_display = (self.adversarial_patch.numpy() * self.PREPROCESSING['std'] + self.PREPROCESSING['mean']) * 255
-        patch_display = n.clip(patch_display, 0, 255).astype(n.uint8)
-        return patch_display
+        return self.adversarial_patch
     
     def get_source_image(self) -> Tensor:
         return self.source_image

@@ -96,6 +96,28 @@ class ModelLoader():
             raise ModelNotLoadedException()
         else:
             return self.model.preprocess_image(image)
+        
+    def normalize_image(self, image: Tensor) -> Image:
+        """
+            Normaliza una imagen.
+            Parametros:	
+            -    image (Tensor): Imagen a normalizar.
+        """
+        if self.model is None:
+            raise ModelNotLoadedException()
+        else:
+            return self.model.normalize_image(image)
+    
+    def normalize_patch(self, patch: Tensor) -> Image:
+        """
+            Normaliza una imagen.
+            Parametros:	
+            -    patch (Tensor): Parche a normalizar.
+        """
+        if self.model is None:
+            raise ModelNotLoadedException()
+        else:
+            return self.model.normalize_patch(patch)
 
     def resize_image(self, image: Tensor) -> Tensor:
         """

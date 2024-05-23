@@ -52,6 +52,29 @@ class ModelInterface():
             -    Tensor: Imagen preprocesada.
         """
         pass
+    
+    def normalize_image(self, tensor: Tensor) -> Image:
+
+        """
+            Normaliza una imagen.
+            Parametros:
+            -    tensor (Tensor): Imagen a normalizar.
+
+            Retorna:
+            -    Image: Imagen normalizada.
+        """
+        pass
+
+    def normalize_patch(self, patch: Tensor) -> Image:
+        """
+            Normaliza un parche.
+            Parametros:
+            -    patch (Tensor): Parche a normalizar.
+
+            Retorna:
+            -    Image: Parche normalizado.
+        """
+        pass
 
     def resize_image(self, image: Tensor) -> Tensor:
         """

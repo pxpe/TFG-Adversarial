@@ -20,6 +20,8 @@ import numpy as n
 
 from typing import Union
 from PIL.Image import Image
+from PIL import Image as im
+
 
 from model_loader.model_utils.model_singleton import Singleton
 
@@ -54,6 +56,16 @@ class ModelResNet50V2(ModelInterface):
     
     def preprocess_image(self, image: Tensor) -> Tensor:
         return preprocess_input(image)
+
+    def normalize_image(self, image: Tensor) -> Image:
+        image = image.numpy()
+        img_original = im.fromarray(((image[0] + 1) * 127.5).astype("uint8"))
+        return img_original
+
+    def normalize_patch(self, patch: Tensor) -> Image:
+        patch = patch.numpy()
+        img_original = im.fromarray(((patch + 1) * 127.5).astype("uint8"))
+        return img_original
 
     def resize_image(self, image: Tensor) -> Tensor:
         return tf.image.resize(image, [224, 224])

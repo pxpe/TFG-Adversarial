@@ -14,6 +14,23 @@ from tensorflow import Tensor
 class FGSMAttack():
 
     def __init__(self, source_image_path: str, epsilon : float, input_label: str, model : ModelInterface) -> None:
+
+        """
+        Clase que implementa el ataque FGSM (Fast Gradient Sign Method) para generar una imagen adversarial.
+
+        Atributos:
+        - source_image_path: Ruta de la imagen original.
+        - epsilon: Valor de la perturbación.
+        - input_label: Etiqueta de la clase objetivo.
+        - model: Modelo utilizado para el ataque.
+        - source_image: Imagen original preprocesada.
+        - loss_object: Función de pérdida utilizada para el ataque.
+        - pretrained_model: Modelo preentrenado utilizado para el ataque.
+        - adversarial_pattern: Patrón adversario generado.
+        - adversarial_image: Imagen adversaria generada.
+        
+        """
+
         self.model = model
         self.epsilon = epsilon
         self.input_label = input_label
