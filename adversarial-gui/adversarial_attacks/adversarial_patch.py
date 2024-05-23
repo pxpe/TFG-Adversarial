@@ -39,7 +39,7 @@ class AdversarialPatch():
     STD = tf.constant([0.229, 0.224, 0.225])
     
     LEARNING_RATE = 0.1
-    ITERATIONS = 5 if not tf.test.is_gpu_available() else 50
+    ITERATIONS = 50 if not tf.test.is_gpu_available() else 100
 
     def __init__(self, source_image_path: str, target_class_label : int, model : ModelInterface, patch_size : int = 50) -> None:
         
