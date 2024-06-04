@@ -270,6 +270,8 @@ class AversarialGUI(customtkinter.CTk):
 
         try:
             epsilon = float(epsilon)
+            if epsilon <= 0 or epsilon > 1:
+                raise ValueError
         except ValueError:
             messagebox.showerror("Error", "El valor de epsilon es incorrecto. " + epsilon)
             return
