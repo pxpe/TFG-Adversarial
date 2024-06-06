@@ -59,14 +59,17 @@ class AdversarialPatch():
         # Convertir el modelo de Keras a un modelo compatible con Foolbox
         self.fmodel = fb.TensorFlowModel(self.pretrained_model, bounds=(0, 1), preprocessing=None)
         
-        if os.path.exists(os.path.join('adversarial_attacks','generated_patches', f'{self.model.get_name()}_{self.target_class_label}.png')):
-            self.adversarial_patch = self.__preprocess_image(os.path.join('adversarial_attacks','generated_patches', f'{self.model.get_name()}_{self.target_class_label}.png'))
-        else:
-            self.adversarial_patch = self.__generate_adversarial_patch()
+        #existing_patch_path = os.path.abspath(os.path.curdir + f'/adversarial_attacks/generated_patches/{self.model.get_name()}_{self.target_class_label}.png')
+        # existing_patch_path = os.path.abspath(os.path.curdir + f'/adversarial-gui/adversarial_attacks/generated_patches/{self.model.get_name()}_{self.target_class_label}.png')
+        # if os.path.exists(existing_patch_path):
+        #     self.adversarial_patch = self.__preprocess_image(existing_patch_path)
+        # else:
+        #    self.adversarial_patch = self.__generate_adversarial_patch()
+        #     self.__save_adversarial_patch()
 
+        self.adversarial_patch = self.__generate_adversarial_patch()
         self.adversarial_image = self.__generate_adversarial_image()
 
-        #self.__save_adversarial_patch()
 
     def __preprocess_image(self, image_path: str) -> Tensor:
         image_raw = tf.io.read_file(image_path)
@@ -82,7 +85,6 @@ class AdversarialPatch():
 
     # Función para aplicar el parche a la imagen
     def __apply_patch(self,image, patch, center):
-        image_shape = tf.shape(image)
         patch_shape = tf.shape(patch)
         start_x = center[0] - patch_shape[0] // 2
         start_y = center[1] - patch_shape[1] // 2
@@ -126,11 +128,26 @@ class AdversarialPatch():
         return self.__apply_patch(self.source_image, self.adversarial_patch, self.patch_center)
 
     def __save_adversarial_patch(self) -> None:
-        if self.adversarial_image is None:
-            raise ValueError('No se ha generado la imagen adversaria.')
-
         image = self.get_adversarial_patch()
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)  # Asignar la conversión a la variable
+
+        # Convertir tensor a array de NumPy
+        image = image.numpy()
+
+        # Asegurarse de que los valores estén en el rango 0-255 y convertir a uint8
+        # Esto asume que los valores están en el rango [0, 1], si están en otro rango, ajusta la multiplicación adecuadamente
+        image = n.clip(image * 255, 0, 255).astype(n.uint8)
+
+        # Verificar la forma de la imagen (debe ser HxWxC)
+        if len(image.shape) == 2:
+            # Si es una imagen en escala de grises, añadir un eje para los canales
+            image = n.expand_dims(image, axis=-1)
+
+        if image.shape[-1] == 1:
+            # Convertir a tres canales si es necesario
+            image = n.repeat(image, 3, axis=-1)
+
+        # Convertir de RGB a BGR para OpenCV
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         
         # Asegurarse de que el directorio exista
 
