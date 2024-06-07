@@ -42,7 +42,7 @@ class AversarialGUI(customtkinter.CTk):
         "Claro": "Light"
     }
 
-    MODELOS_DISPONIBLES = [ "ResNet50 V2", "SignalModel", "MobileNet V2", "VGG19"]
+    MODELOS_DISPONIBLES = [ "ResNet50 V2", "SignalModel", "AdvTrainedSignalModel", "MobileNet V2", "VGG19"]
 
     ATAQUES_DISPONIBLES = ["N/A","FGSM","Parche Adversario"]
 

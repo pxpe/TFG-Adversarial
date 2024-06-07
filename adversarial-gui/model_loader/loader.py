@@ -7,6 +7,7 @@ from model_loader.model_utils.model_predictions import ModelPrediction
 
 from model_loader.models.implementations.ResNet50V2 import ModelResNet50V2
 from model_loader.models.implementations.SignalModel import ModelSignalModel
+from model_loader.models.implementations.AdvTrainedSignalModel import ModelAdvTrainedSignalModel
 from model_loader.models.implementations.MobileNetV2 import ModelMobileNetV2
 from model_loader.models.implementations.VGG19 import ModelVGG19
 
@@ -21,7 +22,7 @@ class ModelLoader():
 
     def __init__(self, default_model: str = "ResNet50 V2"): 
         """
-            Inicializa el cargador de modelos, instanciando ResNet50 V2.
+            Inicializa el cargador de modelos, instanciando por defecto ResNet50 V2.
             Parametros:	
             -    default_model (str): Nombre del modelo por defecto a cargar.
         """
@@ -53,6 +54,9 @@ class ModelLoader():
         
         elif str_model == "VGG19":
             self.model = ModelVGG19()
+        
+        elif str_model == "AdvTrainedSignalModel":
+            self.model = ModelAdvTrainedSignalModel()
 
         else:
             raise InvadidModelName(model_name=str_model)
