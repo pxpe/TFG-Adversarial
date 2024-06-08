@@ -23,9 +23,6 @@ from PIL.Image import Image
 from PIL import Image as im
 
 
-from model_loader.model_utils.model_singleton import Singleton
-
-@Singleton
 class ModelResNet50V2(ModelInterface):
     """
         Clase que implementa el modelo ResNet50 V2.

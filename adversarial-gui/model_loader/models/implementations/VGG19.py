@@ -21,9 +21,7 @@ from typing import Union
 from PIL.Image import Image
 from PIL import Image as im
 
-from model_loader.model_utils.model_singleton import Singleton
 
-@Singleton
 class ModelVGG19(ModelInterface):
     """
         Clase que implementa el modelo VGG19.

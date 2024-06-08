@@ -9,7 +9,6 @@ from model_loader.model_utils.model_labels import getSignalModelLabelsToIndex, g
 
 from ..model_interface import ModelInterface
 
-from model_loader.model_utils.model_singleton import Singleton
 from keras.preprocessing import image
 
 import tensorflow as t
@@ -26,8 +25,6 @@ from tensorflow import Tensor
 
 from keras.applications import imagenet_utils
 
-
-@Singleton
 class ModelAdvTrainedSignalModel(ModelInterface):
     """
         Clase que implementa el modelo SignalModel.

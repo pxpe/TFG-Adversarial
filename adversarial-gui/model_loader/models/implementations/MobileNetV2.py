@@ -22,10 +22,6 @@ from PIL.Image import Image
 
 from PIL import Image as im
 
-
-from model_loader.model_utils.model_singleton import Singleton
-
-@Singleton
 class ModelMobileNetV2(ModelInterface):
     """
         Clase que implementa el modelo MobileNetV2.
