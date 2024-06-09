@@ -16,10 +16,12 @@ from matplotlib import pyplot as plt
 
 from PIL import Image
 import numpy as np
+import tensorflow as tf
 
 from model_loader.loader import ModelLoader
 from adversarial_attacks.FGSM import FGSMAttack
 from adversarial_attacks.adversarial_patch import AdversarialPatch
+from adversarial_defenses.adversarial_purification import AdversarialPurification
 from model_loader.model_utils.model_predictions import generate_prediction_graph
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -46,6 +48,8 @@ class AversarialGUI(customtkinter.CTk):
 
     ATAQUES_DISPONIBLES = ["N/A","FGSM","Parche Adversario"]
 
+    DEFENSAS_DISPONIBLES = ["N/A", "Purificación Adversaria"]
+
     def __init__(self, title : str = "Adversarial GUI",geometry : str = "1200x680", font_family : str = "Consolas", modelLoader : ModelLoader = None):
         super().__init__()
         
@@ -54,11 +58,12 @@ class AversarialGUI(customtkinter.CTk):
         self.current_image = None
         self.model_loader = modelLoader
         self.attack = None
+        self.defense = None
 
         # Configurar la ventana principal
         self.title(title)
         self.geometry(geometry)
-        self.resizable(False, False)
+        self.resizable(True, True)
 
         self.grid_columnconfigure(3, weight=1)
         self.grid_rowconfigure(1, weight=1)
@@ -72,29 +77,39 @@ class AversarialGUI(customtkinter.CTk):
     def __instanciar_sidebar_izq(self):
         # Configurar el sidebar
         self.sidebar_frame = customtkinter.CTkFrame(self, width=180, corner_radius=0)
-        self.sidebar_frame.grid(row=0, column=1, rowspan=4, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(6, weight=1)
+        self.sidebar_frame.grid(row=0, column=1, rowspan=10, sticky="nsew")
+        
+        # Configurar las filas intermedias con peso positivo
+        self.sidebar_frame.grid_rowconfigure(7, weight=1)  # Espacio expansivo
+        self.sidebar_frame.grid_rowconfigure(8, weight=0)  # Fila para el label de tema
+        self.sidebar_frame.grid_rowconfigure(9, weight=0)  # Fila para el combo box de tema
 
-        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text=self.title_str, font=customtkinter.CTkFont(family=self.font_family, size=20, weight="bold"),justify="left")
+        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text=self.title_str, font=customtkinter.CTkFont(family=self.font_family, size=20, weight="bold"), justify="left")
         self.logo_label.grid(row=0, column=0, padx=20, pady=20)
 
-        self.sidebar_model_label = customtkinter.CTkLabel(self.sidebar_frame, text="Modelo:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
+        self.sidebar_model_label = customtkinter.CTkLabel(self.sidebar_frame, text="Modelo:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"), justify="left")
         self.sidebar_model_label.grid(row=1, column=0, padx=15, pady=0, sticky="ew")
 
-        self.sidebar_model = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=self.MODELOS_DISPONIBLES, command= lambda model: self.__cambiar_modelo(model))
+        self.sidebar_model = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=self.MODELOS_DISPONIBLES, command=lambda model: self.__cambiar_modelo(model))
         self.sidebar_model.grid(row=2, column=0, sticky="ew", padx=15, pady=0)
 
-        self.sidebarl_attack_label = customtkinter.CTkLabel(self.sidebar_frame, text="Ataque:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
-        self.sidebarl_attack_label.grid(row=3, column=0, sticky="ew",padx=15, pady=(5,0))
+        self.sidebarl_attack_label = customtkinter.CTkLabel(self.sidebar_frame, text="Ataque:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"), justify="left")
+        self.sidebarl_attack_label.grid(row=3, column=0, sticky="ew", padx=15, pady=(5, 0))
 
-        self.sidebar_attack = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=self.ATAQUES_DISPONIBLES, command = lambda attack: self.__cambiar_ataque(attack))
-        self.sidebar_attack.grid(row=4, column=0, sticky="ew",padx=15, pady=0)
+        self.sidebar_attack = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=self.ATAQUES_DISPONIBLES, command=lambda attack: self.__cambiar_ataque(attack))
+        self.sidebar_attack.grid(row=4, column=0, sticky="ew", padx=15, pady=0)
 
-        self.sidebar_theme_label = customtkinter.CTkLabel(self.sidebar_frame, text="Tema:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
-        self.sidebar_theme_label.grid(row=7, column=0, sticky="ew",padx=15, pady=0)
+        self.sidebar_defense_label = customtkinter.CTkLabel(self.sidebar_frame, text="Defensa:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"), justify="left")
+        self.sidebar_defense_label.grid(row=5, column=0, sticky="ew", padx=15, pady=(5, 0))
 
-        self.sidebar_theme = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=["Oscuro", "Claro"], command = lambda tema: self.__cambiar_tema(theme=tema))
-        self.sidebar_theme.grid(row=8, column=0, sticky="ew",padx=15, pady=(0, 20))
+        self.sidebar_defense = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=self.DEFENSAS_DISPONIBLES, command=lambda defense: self.__cambiar_defensa(defense))
+        self.sidebar_defense.grid(row=6, column=0, sticky="ew", padx=15, pady=0)
+
+        self.sidebar_theme_label = customtkinter.CTkLabel(self.sidebar_frame, text="Tema:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"), justify="left")
+        self.sidebar_theme_label.grid(row=8, column=0, sticky="ew", padx=15, pady=0)
+
+        self.sidebar_theme = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=["Oscuro", "Claro"], command=lambda tema: self.__cambiar_tema(theme=tema))
+        self.sidebar_theme.grid(row=9, column=0, sticky="ew", padx=15, pady=(0, 20))
 
     def __instanciar_contenido(self):
 
@@ -222,6 +237,12 @@ class AversarialGUI(customtkinter.CTk):
                 self.__mostrar_fgsm_params()
             elif attack == "Parche Adversario":
                 self.__mostrar_parche_params()
+
+    def __cambiar_defensa(self, defense : str) -> None:
+        """
+            Método que cambia la defensa a aplicar sobre la imagen cargada.
+        """
+        self.defense = None if defense == "N/A" else defense
     
     def __cambiar_modelo(self, model : str) -> None:
         """
@@ -245,6 +266,30 @@ class AversarialGUI(customtkinter.CTk):
             print(f"El tema '{theme}' no está disponible. Los temas disponibles son: {', '.join(self.TEMAS_DISPONIBLES.keys())}")
    
 
+    def __mostrarResultadosAdversariosPurificados(self, img_original, img_perturbacion, img_adversaria,img_adversaria_purificada, prediccion_real, prediccion_adversaria, desc1, desc2, desc3,descPurificada, fig1, fig2):
+        # Configurar el frame de resultados
+        self.__limpiar_contenido()
+
+        self.result_frame = customtkinter.CTkFrame(self.content_frame,width=400, height=400, corner_radius=20)
+        self.result_frame.grid(row=2, column=0, padx=15, pady=15, sticky="ew")
+        self.result_frame.grid_rowconfigure(1, weight=0)
+        self.result_frame.grid_columnconfigure(4, weight=1)
+
+
+        self.real_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_original, descripcion=desc1, prediccion=prediccion_real, step_size=0, grafico=fig1, font_family=self.font_family)
+        self.real_result.grid(row=0, column=0, padx=5, pady=15)
+
+        self.perturbacion_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_perturbacion, descripcion=desc2, grafico=None, font_family=self.font_family)
+        self.perturbacion_result.grid(row=0, column=1, padx=5, pady=15)
+
+        self.adversarial_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria,prediccion=prediccion_adversaria, descripcion=desc3, grafico=fig2, font_family=self.font_family)
+        self.adversarial_result.grid(row=0, column=2, padx=5, pady=15)
+
+        self.adversarial_purified_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria_purificada, descripcion=descPurificada, grafico=None, font_family=self.font_family)
+        self.adversarial_purified_result.grid(row=1, column=1, padx=5, pady=5)
+
+        self.result_frame.grid_rowconfigure(1, weight=0)
+
     def __mostrarResultadosAdversarios(self, img_original, img_perturbacion, img_adversaria, prediccion_real, prediccion_adversaria, desc1, desc2, desc3, fig1, fig2):
         # Configurar el frame de resultados
         self.__limpiar_contenido()
@@ -263,7 +308,6 @@ class AversarialGUI(customtkinter.CTk):
 
         self.adversarial_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria,prediccion=prediccion_adversaria, descripcion=desc3, grafico=fig2, font_family=self.font_family)
         self.adversarial_result.grid(row=0, column=2, padx=15, pady=15)
-
 
     def __predecir_fgsm(self):
         epsilon = self.fgsm_epsilon.get().replace(',', '.').strip()
@@ -303,7 +347,26 @@ class AversarialGUI(customtkinter.CTk):
 
         img_adversaria = self.model_loader.normalize_image(imagen_adversaria)
 
-        self.__mostrarResultadosAdversarios(img_original, img_perturbacion, img_adversaria, prediccion_real, prediccion_adversaria, "Imagen original", "Perturbación", f"Imagen adversaria con episilon = {epsilon}" , fig1, fig2)
+        if self.defense is None:
+            self.__mostrarResultadosAdversarios(img_original, img_perturbacion, img_adversaria, prediccion_real, prediccion_adversaria, "Imagen original", "Perturbación", f"Imagen adversaria con episilon = {epsilon}" , fig1, fig2)
+        
+        elif self.defense == "Purificación Adversaria":
+            try:
+                img_array = np.array(img_adversaria)
+                img_tensor = tf.convert_to_tensor(img_array, dtype=tf.float32)
+
+                purificador = AdversarialPurification(img_tensor)
+                img_adversaria_purificada = purificador.get_purified_image()
+                
+                img_adversaria_purificada = Image.fromarray(img_adversaria_purificada)
+
+                
+                self.__mostrarResultadosAdversariosPurificados(img_original, img_perturbacion, img_adversaria, img_adversaria_purificada, prediccion_real, prediccion_adversaria, "Imagen original", "Perturbación", "Imagen adversaria", f'Imagen adversaria purificada {purificador.AUTOENCODER_SIZE}x{purificador.AUTOENCODER_SIZE}', fig1, fig2)
+
+            except Exception as e:
+                print(e)
+                messagebox.showerror("Error", "No se ha podido aplicar la defensa de Purificación Adversaria.")        
+
 
 
     def __predecir_parche(self):

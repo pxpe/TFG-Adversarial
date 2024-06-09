@@ -9,9 +9,7 @@ from PIL.Image import Image
 from tensorflow import Tensor
 import numpy as n
 
-from model_loader.model_utils.model_singleton import Singleton
 
-@Singleton # Aplicamos el patrón Singleton mediante un decorador, este patrón nos permite tener una única instancia de la clase ModelInterface y de sus subclases.
 class ModelInterface():
     """
         Interfaz común para todos los modelos del Model Loader.
