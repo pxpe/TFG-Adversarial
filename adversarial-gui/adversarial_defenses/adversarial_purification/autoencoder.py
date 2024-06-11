@@ -7,9 +7,9 @@ import os
 from tensorflow import Tensor
 from typing import List
 
-class DenoiserAutoencoder:
+class DenoiserAutoencoder():
     """
-    Interfaz para aplicar la defensa Purificación Adversaria, reduciendo el ruido en una imagen.
+    Interfaz común para todos los denoising autoencoders.
     """
 
     DENOISER_AUTOENCODER_PATH: str = None  # Ruta del modelo autoencoder

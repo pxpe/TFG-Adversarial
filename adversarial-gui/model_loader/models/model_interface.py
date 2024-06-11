@@ -1,6 +1,7 @@
 # Autor: José Luis López Ruiz
 # Fecha: 08/05/2024
 # Descripción: Este script define la Interfaz común para todos los modelos del Model Loader.
+from abc import ABC, abstractmethod
 
 from model_loader.model_utils.model_predictions import ModelPrediction
 
@@ -10,23 +11,26 @@ from tensorflow import Tensor
 import numpy as n
 
 
-class ModelInterface():
+class ModelInterface(ABC):
     """
         Interfaz común para todos los modelos del Model Loader.
     """
 
-    def _init(self) -> None:
+    @abstractmethod
+    def __init__(self) -> None:
         """
             Inicializa el modelo.
         """
         pass
 
+    @abstractmethod
     def get_name(self) -> str:
         """
             Devuelve el nombre del modelo.
         """
         pass
 
+    @abstractmethod
     def predict(self, image_path: Union[Image,Tensor, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
         """
             Realiza una predicción sobre una imagen.
@@ -43,6 +47,7 @@ class ModelInterface():
         """
         pass
 
+    @abstractmethod
     def preprocess_image(self, image: Tensor) -> Tensor:
         """
             Preprocesa una imagen.
@@ -54,6 +59,7 @@ class ModelInterface():
         """
         pass
     
+    @abstractmethod
     def normalize_image(self, tensor: Tensor) -> Image:
 
         """
@@ -66,6 +72,7 @@ class ModelInterface():
         """
         pass
 
+    @abstractmethod
     def normalize_patch(self, patch: Tensor) -> Image:
         """
             Normaliza un parche.
@@ -77,6 +84,7 @@ class ModelInterface():
         """
         pass
 
+    @abstractmethod
     def resize_image(self, image: Tensor) -> Tensor:
         """
             Redimensiona una imagen al valor óptimo del modelo.
@@ -85,6 +93,7 @@ class ModelInterface():
         """
         pass
 
+    @abstractmethod
     def reshape_image(self, image: Tensor) -> Tensor:
         """
             Redimensiona una imagen al tamaño del modelo.
@@ -93,6 +102,7 @@ class ModelInterface():
         """
         pass
 
+    @abstractmethod
     def get_label(self, class_str: str) -> Tensor:
         """
             Obtiene la etiqueta de una clase.
@@ -104,7 +114,7 @@ class ModelInterface():
         """
         pass
 
-
+    @abstractmethod
     def get_model(self) -> object:
         """
             Devuelve el modelo.

@@ -13,7 +13,7 @@ import cv2
 
 from image_utils.utilities import divide_image, reconstruct_image
 
-from .autoencoder_interface import DenoiserAutoencoder
+from .autoencoder import DenoiserAutoencoder
 
 class Cifar10DenoiserAutoEncoder(DenoiserAutoencoder):
     """
@@ -37,7 +37,7 @@ class Cifar10DenoiserAutoEncoder(DenoiserAutoencoder):
         Devuelve:
             - Imagen purificada.
         """
-        images = divide_image(self.noisy_image, self.AUTOENCODER_SIZE)
+        images = divide_image(self.noisy_image, self.noisy_image.shape[0], self.AUTOENCODER_SIZE)
 
         reconstructed_images = []
         for image_chunk in images:

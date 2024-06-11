@@ -38,8 +38,8 @@ class ModelAdvTrainedSignalModel(ModelInterface):
         - 3: Señal STOP
     """
 
-    #MODEL_PATH = os.path.abspath(os.path.curdir + "/adversarial-gui/default_models/SignAdversaryTrainedClassifier.h5")
-    MODEL_PATH = os.path.abspath(os.path.curdir + "/default_models/SignAdversaryTrainedClassifier.h5")
+    MODEL_PATH = os.path.abspath(os.path.curdir + "/adversarial-gui/default_models/SignAdversaryTrainedClassifier.h5")
+    #MODEL_PATH = os.path.abspath(os.path.curdir + "/default_models/SignAdversaryTrainedClassifier.h5")
     
     def __init__(self) -> None:
         self.CLASES = getSignalModelIndexToLabels()

@@ -50,7 +50,7 @@ class AversarialGUI(customtkinter.CTk):
 
     DEFENSAS_DISPONIBLES = ["N/A", "Purificación Adversaria"]
 
-    def __init__(self, title : str = "Adversarial GUI",geometry : str = "1200x680", font_family : str = "Consolas", modelLoader : ModelLoader = None):
+    def __init__(self, title : str = "Adversarial GUI",geometry : str = "1300x680", font_family : str = "Consolas", modelLoader : ModelLoader = None):
         super().__init__()
         
         self.title_str = title
@@ -275,18 +275,19 @@ class AversarialGUI(customtkinter.CTk):
         self.result_frame.grid_rowconfigure(1, weight=0)
         self.result_frame.grid_columnconfigure(4, weight=1)
 
+        
 
-        self.real_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_original, descripcion=desc1, prediccion=prediccion_real, step_size=0, grafico=fig1, font_family=self.font_family)
+        self.real_result = AdversarialResult(self.result_frame, width=100, height=130, image=img_original, descripcion=desc1, prediccion=prediccion_real, step_size=0, grafico=fig1, font_family=self.font_family)
         self.real_result.grid(row=0, column=0, padx=5, pady=15)
 
-        self.perturbacion_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_perturbacion, descripcion=desc2, grafico=None, font_family=self.font_family)
-        self.perturbacion_result.grid(row=0, column=1, padx=5, pady=15)
+        self.perturbacion_result = AdversarialResult(self.result_frame, width=50, height=50, image=img_perturbacion, descripcion=desc2, grafico=None, font_family=self.font_family)
+        self.perturbacion_result.grid(row=1, column=1, padx=5, pady=5)
 
-        self.adversarial_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria,prediccion=prediccion_adversaria, descripcion=desc3, grafico=fig2, font_family=self.font_family)
-        self.adversarial_result.grid(row=0, column=2, padx=5, pady=15)
+        self.adversarial_result = AdversarialResult(self.result_frame, width=100, height=130, image=img_adversaria,prediccion=prediccion_adversaria, descripcion=desc3, grafico=fig2, font_family=self.font_family)
+        self.adversarial_result.grid(row=0, column=1, padx=5, pady=15)
 
-        self.adversarial_purified_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria_purificada, prediccion=prediccion_purificada,descripcion=descPurificada, grafico=fig3, font_family=self.font_family)
-        self.adversarial_purified_result.grid(row=0, column=3, padx=5, pady=5)
+        self.adversarial_purified_result = AdversarialResult(self.result_frame, width=100, height=130, image=img_adversaria_purificada, prediccion=prediccion_purificada,descripcion=descPurificada, grafico=fig3, font_family=self.font_family)
+        self.adversarial_purified_result.grid(row=0, column=2, padx=5, pady=5)
 
         self.result_frame.grid_rowconfigure(1, weight=0)
 
@@ -360,7 +361,7 @@ class AversarialGUI(customtkinter.CTk):
                 fig3, _ = generate_prediction_graph(predictions_purified_image[1])
 
                 # Convert the numpy array to a PIL image
-                pil_image = Image.fromarray((img_adversaria_purificada * 175.5).astype("uint8"))
+                pil_image = Image.fromarray((img_adversaria_purificada * 255.0).astype("uint8"))
 
                 self.__mostrarResultadosAdversariosPurificados(img_original, img_perturbacion, img_adversaria, pil_image, prediccion_real, prediccion_adversaria,predictions_purified_image, "Imagen original", "Perturbación", "Imagen adversaria", f'Imagen adversaria purificada', fig1, fig2, fig3)
 
