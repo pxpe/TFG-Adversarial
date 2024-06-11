@@ -85,6 +85,14 @@ class ModelInterface():
         """
         pass
 
+    def reshape_image(self, image: Tensor) -> Tensor:
+        """
+            Redimensiona una imagen al tamaño del modelo.
+            Parametros:
+            -    image (Tensor): Imagen a redimensionar.
+        """
+        pass
+
     def get_label(self, class_str: str) -> Tensor:
         """
             Obtiene la etiqueta de una clase.

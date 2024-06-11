@@ -21,7 +21,7 @@ import tensorflow as tf
 from model_loader.loader import ModelLoader
 from adversarial_attacks.FGSM import FGSMAttack
 from adversarial_attacks.adversarial_patch import AdversarialPatch
-from adversarial_defenses.adversarial_purification import AdversarialPurification
+from adversarial_defenses.adversarial_purification.Cifar10DenoiserAutoencoder import Cifar10DenoiserAutoEncoder
 from model_loader.model_utils.model_predictions import generate_prediction_graph
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -80,9 +80,9 @@ class AversarialGUI(customtkinter.CTk):
         self.sidebar_frame.grid(row=0, column=1, rowspan=10, sticky="nsew")
         
         # Configurar las filas intermedias con peso positivo
-        self.sidebar_frame.grid_rowconfigure(7, weight=1)  # Espacio expansivo
-        self.sidebar_frame.grid_rowconfigure(8, weight=0)  # Fila para el label de tema
-        self.sidebar_frame.grid_rowconfigure(9, weight=0)  # Fila para el combo box de tema
+        self.sidebar_frame.grid_rowconfigure(8, weight=1)  # Espacio expansivo
+        self.sidebar_frame.grid_rowconfigure(9, weight=0)  # Fila para el label de tema
+        self.sidebar_frame.grid_rowconfigure(10, weight=0)  # Fila para el combo box de tema
 
         self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text=self.title_str, font=customtkinter.CTkFont(family=self.font_family, size=20, weight="bold"), justify="left")
         self.logo_label.grid(row=0, column=0, padx=20, pady=20)
@@ -100,16 +100,16 @@ class AversarialGUI(customtkinter.CTk):
         self.sidebar_attack.grid(row=4, column=0, sticky="ew", padx=15, pady=0)
 
         self.sidebar_defense_label = customtkinter.CTkLabel(self.sidebar_frame, text="Defensa:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"), justify="left")
-        self.sidebar_defense_label.grid(row=5, column=0, sticky="ew", padx=15, pady=(5, 0))
+        self.sidebar_defense_label.grid(row=6, column=0, sticky="ew", padx=15, pady=(5, 0))
 
         self.sidebar_defense = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=self.DEFENSAS_DISPONIBLES, command=lambda defense: self.__cambiar_defensa(defense))
-        self.sidebar_defense.grid(row=6, column=0, sticky="ew", padx=15, pady=0)
+        self.sidebar_defense.grid(row=7, column=0, sticky="ew", padx=15, pady=0)
 
         self.sidebar_theme_label = customtkinter.CTkLabel(self.sidebar_frame, text="Tema:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"), justify="left")
-        self.sidebar_theme_label.grid(row=8, column=0, sticky="ew", padx=15, pady=0)
+        self.sidebar_theme_label.grid(row=9, column=0, sticky="ew", padx=15, pady=0)
 
         self.sidebar_theme = customtkinter.CTkComboBox(self.sidebar_frame, font=customtkinter.CTkFont(family=self.font_family, size=12), values=["Oscuro", "Claro"], command=lambda tema: self.__cambiar_tema(theme=tema))
-        self.sidebar_theme.grid(row=9, column=0, sticky="ew", padx=15, pady=(0, 20))
+        self.sidebar_theme.grid(row=10, column=0, sticky="ew", padx=15, pady=(0, 20))
 
     def __instanciar_contenido(self):
 
@@ -266,7 +266,7 @@ class AversarialGUI(customtkinter.CTk):
             print(f"El tema '{theme}' no está disponible. Los temas disponibles son: {', '.join(self.TEMAS_DISPONIBLES.keys())}")
    
 
-    def __mostrarResultadosAdversariosPurificados(self, img_original, img_perturbacion, img_adversaria,img_adversaria_purificada, prediccion_real, prediccion_adversaria, desc1, desc2, desc3,descPurificada, fig1, fig2):
+    def __mostrarResultadosAdversariosPurificados(self, img_original, img_perturbacion, img_adversaria,img_adversaria_purificada, prediccion_real, prediccion_adversaria, prediccion_purificada , desc1, desc2, desc3,descPurificada, fig1, fig2, fig3):
         # Configurar el frame de resultados
         self.__limpiar_contenido()
 
@@ -285,8 +285,8 @@ class AversarialGUI(customtkinter.CTk):
         self.adversarial_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria,prediccion=prediccion_adversaria, descripcion=desc3, grafico=fig2, font_family=self.font_family)
         self.adversarial_result.grid(row=0, column=2, padx=5, pady=15)
 
-        self.adversarial_purified_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria_purificada, descripcion=descPurificada, grafico=None, font_family=self.font_family)
-        self.adversarial_purified_result.grid(row=1, column=1, padx=5, pady=5)
+        self.adversarial_purified_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria_purificada, descripcion=descPurificada, grafico=fig3, font_family=self.font_family)
+        self.adversarial_purified_result.grid(row=0, column=3, padx=5, pady=5)
 
         self.result_frame.grid_rowconfigure(1, weight=0)
 
@@ -352,16 +352,18 @@ class AversarialGUI(customtkinter.CTk):
         
         elif self.defense == "Purificación Adversaria":
             try:
-                img_array = np.array(img_adversaria)
-                img_tensor = tf.convert_to_tensor(img_array, dtype=tf.float32)
-
-                purificador = AdversarialPurification(img_tensor)
+                purificador = Cifar10DenoiserAutoEncoder(imagen_adversaria[0])
                 img_adversaria_purificada = purificador.get_purified_image()
+                img_adversaria_purificada_reshape = self.model_loader.reshape_image(img_adversaria_purificada)
                 
-                img_adversaria_purificada = Image.fromarray(img_adversaria_purificada)
+                predictions_purified_image = self.model_loader.predict(img_adversaria_purificada_reshape)
+                print(predictions_purified_image[1])
+                fig3, _ = generate_prediction_graph(predictions_purified_image[1])
 
-                
-                self.__mostrarResultadosAdversariosPurificados(img_original, img_perturbacion, img_adversaria, img_adversaria_purificada, prediccion_real, prediccion_adversaria, "Imagen original", "Perturbación", "Imagen adversaria", f'Imagen adversaria purificada {purificador.AUTOENCODER_SIZE}x{purificador.AUTOENCODER_SIZE}', fig1, fig2)
+                # Convert the numpy array to a PIL image
+                pil_image = Image.fromarray((img_adversaria_purificada).astype(np.uint8))
+
+                self.__mostrarResultadosAdversariosPurificados(img_original, img_perturbacion, img_adversaria, pil_image, prediccion_real, prediccion_adversaria,predictions_purified_image, "Imagen original", "Perturbación", "Imagen adversaria", f'Imagen adversaria purificada', fig1, fig2, fig3)
 
             except Exception as e:
                 print(e)

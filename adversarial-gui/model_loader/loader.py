@@ -133,6 +133,18 @@ class ModelLoader():
             raise ModelNotLoadedException()
         else:
             return self.model.resize_image(image)
+        
+    def reshape_image(self, image: Tensor) -> Tensor:
+        """
+            Redimensiona una imagen al tamaño óptimo del modelo.
+            Parametros:	
+            -    image (Tensor): Imagen a redimensionar.
+        """
+        if self.model is None:
+            raise ModelNotLoadedException()
+        else:
+            return self.model.reshape_image(image)
+
 
     def get_label(self, class_str: str) -> Tensor:
         """

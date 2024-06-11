@@ -68,7 +68,10 @@ class ModelMobileNetV2(ModelInterface):
 
     def resize_image(self, image: Tensor) -> Tensor:
         return tf.image.resize(image, [224, 224])
-
+    
+    def reshape_image(self, image: Tensor) -> Tensor:
+        return tf.reshape(image, (1, 224, 224, 3))
+    
     def get_label(self, class_str: str) -> Tensor:
         model_labels = getImageNetLabelsToIndex()
         class_str = class_str.replace('_', ' ')

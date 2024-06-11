@@ -94,6 +94,9 @@ class ModelSignalModel(ModelInterface):
     def resize_image(self, image: Tensor) -> Tensor:
         return t.image.resize(image, [256, 256])
 
+    def reshape_image(self, image: Tensor) -> Tensor:
+        return tf.reshape(image, (1, 256, 256, 3))
+
     def get_label(self, class_str: str) -> Tensor:
 
         class_index = getSignalModelLabelsToIndex()[class_str]
