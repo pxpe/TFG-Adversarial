@@ -285,7 +285,7 @@ class AversarialGUI(customtkinter.CTk):
         self.adversarial_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria,prediccion=prediccion_adversaria, descripcion=desc3, grafico=fig2, font_family=self.font_family)
         self.adversarial_result.grid(row=0, column=2, padx=5, pady=15)
 
-        self.adversarial_purified_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria_purificada, descripcion=descPurificada, grafico=fig3, font_family=self.font_family)
+        self.adversarial_purified_result = AdversarialResult(self.result_frame, width=150, height=180, image=img_adversaria_purificada, prediccion=prediccion_purificada,descripcion=descPurificada, grafico=fig3, font_family=self.font_family)
         self.adversarial_purified_result.grid(row=0, column=3, padx=5, pady=5)
 
         self.result_frame.grid_rowconfigure(1, weight=0)
@@ -357,11 +357,10 @@ class AversarialGUI(customtkinter.CTk):
                 img_adversaria_purificada_reshape = self.model_loader.reshape_image(img_adversaria_purificada)
                 
                 predictions_purified_image = self.model_loader.predict(img_adversaria_purificada_reshape)
-                print(predictions_purified_image[1])
                 fig3, _ = generate_prediction_graph(predictions_purified_image[1])
 
                 # Convert the numpy array to a PIL image
-                pil_image = Image.fromarray((img_adversaria_purificada).astype(np.uint8))
+                pil_image = Image.fromarray((img_adversaria_purificada * 175.5).astype("uint8"))
 
                 self.__mostrarResultadosAdversariosPurificados(img_original, img_perturbacion, img_adversaria, pil_image, prediccion_real, prediccion_adversaria,predictions_purified_image, "Imagen original", "Perturbación", "Imagen adversaria", f'Imagen adversaria purificada', fig1, fig2, fig3)
 

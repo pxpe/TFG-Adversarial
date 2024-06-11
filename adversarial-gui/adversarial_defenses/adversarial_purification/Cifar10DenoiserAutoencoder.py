@@ -51,6 +51,6 @@ class Cifar10DenoiserAutoEncoder(DenoiserAutoencoder):
         # Reconstruye la imagen original a partir de los bloques procesados
         reconstructed_image = reconstruct_image(reconstructed_images, self.noisy_image.shape[0], self.AUTOENCODER_SIZE)
 
-        purified_image = cv2.GaussianBlur(reconstructed_image, (3, 3), 0)
+        purified_image = cv2.GaussianBlur(reconstructed_image, (3, 3), 5)
 
         return purified_image
