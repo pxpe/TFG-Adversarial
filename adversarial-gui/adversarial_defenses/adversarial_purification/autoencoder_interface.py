@@ -5,50 +5,51 @@
 
 import os
 from tensorflow import Tensor
+from typing import List
 
-class DenoiserAutoencoder():
+class DenoiserAutoencoder:
     """
-        Interfaz para aplicar la defensa Purificación Adversaria, reduciendo el ruido en una imagen.
+    Interfaz para aplicar la defensa Purificación Adversaria, reduciendo el ruido en una imagen.
     """
 
-    DENOISER_AUTOENCODER_PATH = None   # Ruta del modelo autoencoder
-    AUTOENCODER_INPUT_SHAPE = None     # Formato de entrada del autoencoder
-    AUTOENCODER_SIZE = None            # Tamaño de la imagen de entrada del autoencoder
-
+    DENOISER_AUTOENCODER_PATH: str = None  # Ruta del modelo autoencoder
+    AUTOENCODER_INPUT_SHAPE: List[int] = None  # Formato de entrada del autoencoder
+    AUTOENCODER_SIZE: int = None  # Tamaño de la imagen de entrada del autoencoder
 
     def __init__(self, noisy_image: Tensor) -> None:
         """
-            Constructor que inicializa la defensa Purificación Adversaria.
-            Parámetros:
-                - noisy_image: Imagen ruidosa.
+        Constructor que inicializa la defensa Purificación Adversaria.
+        Parámetros:
+            - noisy_image: Imagen ruidosa.
         """
-        pass
+        self.noisy_image = noisy_image
+        self.purified_image = None
 
-
-    def __purify(self) -> Tensor:
+    def _purify(self) -> Tensor:
         """
-            Aplica la defensa Purificación Adversaria en una imagen y devuelve la imagen purificada.
+        Aplica la defensa Purificación Adversaria en una imagen y devuelve la imagen purificada.
 
-            Devuelve:
-                - Imagen purificada.
+        Devuelve:
+            - Imagen purificada.
         """
-        pass
+        raise NotImplementedError("El método _purify debe ser implementado por la subclase.")
 
-    
     def get_purified_image(self) -> Tensor:
         """
-            Devuelve la imagen purificada.
+        Devuelve la imagen purificada.
         """
+        if self.purified_image is None:
+            self.purified_image = self._purify()
         return self.purified_image
 
-    def get_autoencoder_input_shape(self) -> list:
+    def get_autoencoder_input_shape(self) -> List[int]:
         """
-            Devuelve el formato de entrada del autoencoder.
+        Devuelve el formato de entrada del autoencoder.
         """
         return self.AUTOENCODER_INPUT_SHAPE
-    
+
     def get_autoencoder_size(self) -> int:
         """
-            Devuelve el tamaño de la imagen de entrada del autoencoder.
+        Devuelve el tamaño de la imagen de entrada del autoencoder.
         """
         return self.AUTOENCODER_SIZE

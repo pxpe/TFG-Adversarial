@@ -16,41 +16,36 @@ from image_utils.utilities import divide_image, reconstruct_image
 from .autoencoder_interface import DenoiserAutoencoder
 
 class Cifar10DenoiserAutoEncoder(DenoiserAutoencoder):
-
     """
-        Clase que implementa la defensa Purificación Adversaria en una imagen utilizando un Autoencoder entrenado con el dataset CIFAR-10 de imágenes 32x32.
-        Implementa la interfaz DenoiserAutoencoder.
+    Clase que implementa la defensa Purificación Adversaria en una imagen utilizando un Autoencoder entrenado con el dataset CIFAR-10 de imágenes 32x32.
+    Implementa la interfaz DenoiserAutoencoder.
     """
 
-    #DENOISER_AUTOENCODER_PATH = os.path.abspath(os.path.curdir + "/default_models/denoiser_autoencoder.h5") # Ruta del modelo autoencoder
-    DENOISER_AUTOENCODER_PATH = os.path.abspath(os.path.curdir + "/adversarial-gui/default_models/denoiser_autoencoder.h5") # Ruta del modelo autoencoder
+    DENOISER_AUTOENCODER_PATH = os.path.abspath(os.path.curdir + "/adversarial-gui/default_models/denoiser_autoencoder.h5")
+    AUTOENCODER_INPUT_SHAPE = [1, 32, 32, 3]
+    AUTOENCODER_SIZE = 32
 
-    AUTOENCODER_INPUT_SHAPE = [1,32,32,3] # Formato de entrada del autoencoder
-    AUTOENCODER_SIZE = 32                 # Tamaño de la imagen de entrada del autoencoder
-
-    def __init__(self, noisy_image: Tensor) -> None:
-        self.noisy_image = noisy_image
+    def __init__(self, noisy_image: tf.Tensor) -> None:
+        super().__init__(noisy_image)
         self.__denoiser = load_model(self.DENOISER_AUTOENCODER_PATH)
-        self.purified_image = self.__purify()
+        self.purified_image = self._purify()
 
-    def __purify(self) -> Tensor:
+    def _purify(self) -> tf.Tensor:
+        """
+        Aplica la defensa Purificación Adversaria en una imagen y devuelve la imagen purificada.
 
-        # Divide la imagen en bloques de 32x32
-        images = divide_image(self.noisy_image, self.noisy_image.shape[0], self.AUTOENCODER_SIZE)
+        Devuelve:
+            - Imagen purificada.
+        """
+        images = divide_image(self.noisy_image, self.AUTOENCODER_SIZE)
 
-        # Procesa cada bloque de la imagen con el autoencoder
         reconstructed_images = []
         for image_chunk in images:
-            # Reescala la imagen a 32x32x3
             reshaped_image_chunk = tf.reshape(image_chunk, self.AUTOENCODER_INPUT_SHAPE)
-            # Procesa la imagen con el autoencoder
             reconstructed_img = self.__denoiser.predict(reshaped_image_chunk)
-            # Añade la imagen procesada a la lista de imágenes reconstruidas
             reconstructed_images.append(reconstructed_img)
             
-        # Reconstruye la imagen original a partir de los bloques procesados
         reconstructed_image = reconstruct_image(reconstructed_images, self.noisy_image.shape[0], self.AUTOENCODER_SIZE)
-
         purified_image = cv2.GaussianBlur(reconstructed_image, (3, 3), 5)
 
         return purified_image
