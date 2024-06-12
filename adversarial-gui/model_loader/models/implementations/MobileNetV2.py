@@ -30,8 +30,12 @@ class ModelMobileNetV2(ModelInterface):
         Clase que implementa el modelo MobileNetV2.
     """
 
+    MODEL_INPUT_SHAPE = (1, 224, 224, 3)
+    MODEL_INPUT_SIZE = (224, 224)
+    MODEL_CLASS_COUNT = 1000
+
     def __init__(self) -> None:
-        self.model = MobileNetV2(include_top=True, weights='imagenet', classes=1000)
+        self.model = MobileNetV2(include_top=True, weights='imagenet', classes=self.MODEL_CLASS_COUNT)
         self.model_name = "MobileNet V2"
 
     def get_name(self) -> str:
@@ -39,7 +43,7 @@ class ModelMobileNetV2(ModelInterface):
     
     def predict(self, image_path: Union[Image,Tensor, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
         if type(image_path) == str:
-            img = image.image_utils.load_img(image_path, target_size=(224, 224))
+            img = image.image_utils.load_img(image_path, target_size=self.MODEL_INPUT_SIZE)
             img = image.image_utils.img_to_array(img)
             img = preprocess_input(n.expand_dims(img, axis=0))
         else:
@@ -67,17 +71,17 @@ class ModelMobileNetV2(ModelInterface):
         return img_original
 
     def resize_image(self, image: Tensor) -> Tensor:
-        return tf.image.resize(image, [224, 224])
+        return tf.image.resize(image, self.MODEL_INPUT_SIZE)
     
     def reshape_image(self, image: Tensor) -> Tensor:
-        return tf.reshape(image, (1, 224, 224, 3))
+        return tf.reshape(image, self.MODEL_INPUT_SHAPE)
     
     def get_label(self, class_str: str) -> Tensor:
         model_labels = getImageNetLabelsToIndex()
         class_str = class_str.replace('_', ' ')
         class_index = model_labels[class_str]
-        label = tf.one_hot(class_index, 1000)
-        label = tf.reshape(label, (1, 1000))
+        label = tf.one_hot(class_index, self.MODEL_CLASS_COUNT)
+        label = tf.reshape(label, (1, self.MODEL_CLASS_COUNT))
 
         return label
     

@@ -37,12 +37,15 @@ class ModelSignalModel(ModelInterface):
         - 2: Señal Radar
         - 3: Señal STOP
     """
+    
+    MODEL_INPUT_SHAPE = (1, 256, 256, 3)
+    MODEL_INPUT_SIZE = (256, 256)
+    MODEL_CLASS_COUNT = 4
 
     MODEL_PATH = os.path.abspath(os.path.curdir + "/adversarial-gui/default_models/signal_model.h5")
     #MODEL_PATH = os.path.abspath(os.path.curdir + "/default_models/signal_model.h5")
     
     def __init__(self) -> None:
-        self.CLASES = getSignalModelIndexToLabels()
         try:
             self.model = t.keras.models.load_model(self.MODEL_PATH)
             self.model_name = 'SignalModel'
@@ -56,7 +59,7 @@ class ModelSignalModel(ModelInterface):
     def predict(self, image_path: Union[Image,Tensor, str], not_decoded : bool = False) -> Union[tuple[ModelPrediction,list[ModelPrediction]] , n.ndarray]:
         if type(image_path) == str:
             img = cv2.imread(image_path)
-            img = t.image.resize(img, [256, 256])
+            img = t.image.resize(img, self.MODEL_INPUT_SIZE)
         elif type(image_path) == Image:
             img = image.image_utils.img_to_array(image_path)
         else:
@@ -92,16 +95,16 @@ class ModelSignalModel(ModelInterface):
         return img_original
 
     def resize_image(self, image: Tensor) -> Tensor:
-        return t.image.resize(image, [256, 256])
+        return t.image.resize(image, self.MODEL_INPUT_SIZE)
 
     def reshape_image(self, image: Tensor) -> Tensor:
-        return tf.reshape(image, (1, 256, 256, 3))
+        return tf.reshape(image, self.MODEL_INPUT_SHAPE)
 
     def get_label(self, class_str: str) -> Tensor:
 
         class_index = getSignalModelLabelsToIndex()[class_str]
-        label = tf.one_hot(class_index, len(self.CLASES))
-        label = tf.reshape(label, (1, len(self.CLASES)))
+        label = tf.one_hot(class_index, self.MODEL_CLASS_COUNT)
+        label = tf.reshape(label, (1, self.MODEL_CLASS_COUNT))
 
         return label
     

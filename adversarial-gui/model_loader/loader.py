@@ -23,7 +23,6 @@ class ModelLoader():
             Parametros:	
             -    default_model (str): Nombre del modelo por defecto a cargar.
         """
-        self.models = {}
         self.model = None
         self.factory = ModelFactory()
         
@@ -51,6 +50,7 @@ class ModelLoader():
             Realiza una predicción sobre una imagen usando el modelo cargado.
             Parametros:	
             -    image_path (str | Image: Ruta de la imagen a predecir.
+            -    not_decoded (bool): Indica si la imagen no ha sido decodificada.
         """
         if self.model is None:
             raise ModelNotLoadedException()

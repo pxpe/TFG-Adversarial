@@ -44,7 +44,7 @@ class AversarialGUI(customtkinter.CTk):
         "Claro": "Light"
     }
 
-    MODELOS_DISPONIBLES = [ "ResNet50 V2", "SignalModel", "AdvTrainedSignalModel", "MobileNet V2", "VGG19"]
+    MODELOS_DISPONIBLES = ["ResNet50 V2", "SignalModel", "AdvTrainedSignalModel", "MobileNet V2", "VGG19"]
 
     ATAQUES_DISPONIBLES = ["N/A","FGSM","Parche Adversario"]
 
@@ -52,6 +52,11 @@ class AversarialGUI(customtkinter.CTk):
 
     def __init__(self, title : str = "Adversarial GUI",geometry : str = "1300x680", font_family : str = "Consolas", modelLoader : ModelLoader = None):
         super().__init__()
+
+        if tf.test.is_gpu_available():
+            print("GPU disponible: " + tf.test.gpu_device_name())
+        else:
+            print("GPU no disponible")
         
         self.title_str = title
         self.font_family = font_family
@@ -68,9 +73,9 @@ class AversarialGUI(customtkinter.CTk):
         self.grid_columnconfigure(3, weight=1)
         self.grid_rowconfigure(1, weight=1)
 
-        # Configurar el sidebar
+        # Instanciar el sidebar de la izquierda
         self.__instanciar_sidebar_izq()
-        # Configurar el contenido
+        # Configurar el resto de la interfaz (contenido principal e importación de imagen)
         self.__instanciar_contenido()
 
 

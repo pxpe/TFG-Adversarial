@@ -29,11 +29,15 @@ class ModelVGG19(ModelInterface):
         Clase que implementa el modelo VGG19.
     """
 
+    MODEL_INPUT_SHAPE = (1, 224, 224, 3)
+    MODEL_INPUT_SIZE = (224, 224)
+    MODEL_CLASS_COUNT = 1000
+
     MEAN = tf.constant([0.485, 0.456, 0.406])
     STD = tf.constant([0.229, 0.224, 0.225])
 
     def __init__(self) -> None:
-        self.model = VGG19(include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None, classes=1000)
+        self.model = VGG19(include_top=True, weights='imagenet', input_tensor=None, input_shape=None, pooling=None, classes=self.MODEL_CLASS_COUNT)
         self.model_name = "VGG19"
 
     def get_name(self) -> str:
@@ -74,17 +78,17 @@ class ModelVGG19(ModelInterface):
         return image
     
     def resize_image(self, image: Tensor) -> Tensor:
-        return tf.image.resize(image, [224, 224])
+        return tf.image.resize(image, self.MODEL_INPUT_SIZE)
     
     def reshape_image(self, image: Tensor) -> Tensor:
-        return tf.reshape(image, (1, 224, 224, 3))
+        return tf.reshape(image, self.MODEL_INPUT_SHAPE)
 
     def get_label(self, class_str: str) -> Tensor:
         model_labels = getImageNetLabelsToIndex()
         class_str = class_str.replace('_', ' ')
         class_index = model_labels[class_str]
-        label = tf.one_hot(class_index, 1000)
-        label = tf.reshape(label, (1, 1000))
+        label = tf.one_hot(class_index, self.MODEL_CLASS_COUNT)
+        label = tf.reshape(label, (1, self.MODEL_CLASS_COUNT))
 
         return label
     

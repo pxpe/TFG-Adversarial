@@ -30,24 +30,18 @@ class ModelFactory():
             Parametros:	
             -    str_model (str): Nombre del modelo a cargar.
         """
-        
         model = None
 
         if model_name == "ResNet50 V2": 
             model = ModelResNet50V2()
-
         elif model_name == "SignalModel":
             model = ModelSignalModel()
-
         elif model_name == "MobileNet V2":
             model = ModelMobileNetV2()
-        
         elif model_name == "VGG19":
             model = ModelVGG19()
-        
         elif model_name == "AdvTrainedSignalModel":
             model = ModelAdvTrainedSignalModel()
-
         else:
             raise InvadidModelName(model_name=model_name)
 
