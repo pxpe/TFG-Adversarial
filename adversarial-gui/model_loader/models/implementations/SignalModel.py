@@ -42,10 +42,11 @@ class ModelSignalModel(ModelInterface):
     MODEL_INPUT_SIZE = (256, 256)
     MODEL_CLASS_COUNT = 4
 
-    MODEL_PATH = os.path.abspath(os.path.curdir + "/adversarial-gui/default_models/signal_model.h5")
-    #MODEL_PATH = os.path.abspath(os.path.curdir + "/default_models/signal_model.h5")
+    #MODEL_PATH = os.path.abspath(os.path.curdir + "/adversarial-gui/default_models/signal_model.h5")
+    MODEL_PATH = os.path.abspath(os.path.curdir + "/default_models/signal_model.h5")
     
     def __init__(self) -> None:
+        self.CLASES = getSignalModelIndexToLabels()
         try:
             self.model = t.keras.models.load_model(self.MODEL_PATH)
             self.model_name = 'SignalModel'

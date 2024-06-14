@@ -69,7 +69,7 @@ class AdversarialPatch():
 
         self.adversarial_patch = self.__generate_adversarial_patch()
         self.adversarial_image = self.__generate_adversarial_image()
-
+        self.__save_adversarial_patch()
 
     def __preprocess_image(self, image_path: str) -> Tensor:
         image_raw = tf.io.read_file(image_path)
