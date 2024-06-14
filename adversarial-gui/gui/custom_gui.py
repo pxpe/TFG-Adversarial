@@ -4,6 +4,7 @@
 
 import os
 from typing import Union, Literal
+import asyncio
 from time import time
 
 import customtkinter
@@ -217,7 +218,13 @@ class AversarialGUI(customtkinter.CTk):
         self.patch_class_label.grid(row=0, column=0, sticky="ew",padx=15, pady=(5,0))
 
         self.patch_target_class = ScrollableSearch(self.sidebar_attack_params, entries=self.model_loader.get_classes())
-        self.patch_target_class.grid(row=1, column=0, sticky="ew",padx=15, pady=(5,15))
+        self.patch_target_class.grid(row=1, column=0, sticky="ew",padx=15, pady=(5,0))
+
+        self.path_iterations_label = customtkinter.CTkLabel(self.sidebar_attack_params, text="Iteraciones:", anchor='w', font=customtkinter.CTkFont(family=self.font_family, size=12, weight="bold"),justify="left")
+        self.path_iterations_label.grid(row=2, column=0, sticky="ew",padx=15, pady=(5,0))
+        
+        self.patch_iterations = customtkinter.CTkEntry(self.sidebar_attack_params, placeholder_text="50", font=customtkinter.CTkFont(family="Consolas", size=14))
+        self.patch_iterations.grid(row=3, column=0, padx=15, pady=5)
 
 
     def __mostrar_imagen(self):
@@ -393,7 +400,8 @@ class AversarialGUI(customtkinter.CTk):
         fig1, _ = generate_prediction_graph(prediccion_real[1])
 
         try:
-            patch = AdversarialPatch(self.current_image, target_class, self.model_loader)
+            patch = AdversarialPatch(self.current_image, target_class, self.model_loader, self.patch_iterations.getint())
+            asyncio.run(patch.generate_adversarial_patch())
         except Exception as e:
             print(e)
             messagebox.showerror("Error", f"No se ha podido generar el parche adversario. Vuelve a intentarlo o cambia de clase objetivo.")
@@ -414,7 +422,6 @@ class AversarialGUI(customtkinter.CTk):
         img_adversaria = self.model_loader.normalize_image(adversarial_image)
 
         self.__mostrarResultadosAdversarios(img_original, img_perturbacion, img_adversaria, prediccion_real, adversarial_prediction, "Imagen original", "Parche adversario", "Imagen adversaria", fig1, fig2)
-
 
 
 
