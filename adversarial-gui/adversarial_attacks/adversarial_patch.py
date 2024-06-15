@@ -12,6 +12,9 @@ import foolbox as fb
 import os
 from tensorflow import Tensor
 
+from customtkinter import CTkProgressBar, CTkLabel
+import queue
+
 class AdversarialPatch():
 
     """
@@ -44,6 +47,8 @@ class AdversarialPatch():
         self.model = model
         self.target_class_label = target_class_label
         self.iterations = iterations
+
+        print(f'Ataque Parche Adversario con el modelo {model.get_name()} y la clase objetivo {target_class_label}. Iteraciones: {iterations}')
 
         self.patch_size = patch_size
         self.patch_center = (112, 112)
@@ -93,7 +98,7 @@ class AdversarialPatch():
         patched_image = image * (1 - mask) + mask
         return patched_image
 
-    async def generate_adversarial_patch(self) -> tf.Tensor:
+    async def generate_adversarial_patch(self, queue: queue.Queue) -> tf.Tensor:
         patch = n.random.rand(self.patch_size, self.patch_size, 3) # Inicializar el parche con ruido aleatorio
         patch = tf.Variable(patch, dtype=tf.float32)
 
@@ -113,6 +118,8 @@ class AdversarialPatch():
             patch.assign(tf.clip_by_value(patch, -3, 3))  # Ajusta según el rango de tu imagen preprocesada
             
             print(f'Iteración {i}, Pérdida: {n.mean(loss.numpy())}')
+            queue.put((i + 1,f'Iteración {i + 1} / {self.iterations}'))  # Envía la actualización a la cola
+
 
         self.adversarial_patch = patch
         try:
@@ -120,8 +127,9 @@ class AdversarialPatch():
         except Exception as e:
             print(f'Error al guardar el parche adversario: {e}')
 
+
         self.adversarial_image = self.__generate_adversarial_image()
-        
+        queue.put('done')
     
     def __generate_adversarial_image(self) -> Tensor:
         return self.__apply_patch(self.source_image, self.adversarial_patch, self.patch_center)

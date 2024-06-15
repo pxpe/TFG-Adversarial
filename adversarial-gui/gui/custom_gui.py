@@ -5,6 +5,8 @@
 import os
 from typing import Union, Literal
 import asyncio
+import threading
+import queue
 from time import time
 
 import customtkinter
@@ -69,15 +71,30 @@ class AversarialGUI(customtkinter.CTk):
         # Configurar la ventana principal
         self.title(title)
         self.geometry(geometry)
-        self.resizable(True, True)
+        self.resizable(False, False)
 
         self.grid_columnconfigure(3, weight=1)
         self.grid_rowconfigure(1, weight=1)
+
+        # Manejar eventos de cierre de la ventana y destrucción de subprocesos
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+        self.update_queue = queue.Queue()
+        self.event = threading.Event()
+
+        self.protocol("WM_DELETE_WINDOW", self.__cerrar_ventana)
 
         # Instanciar el sidebar de la izquierda
         self.__instanciar_sidebar_izq()
         # Configurar el resto de la interfaz (contenido principal e importación de imagen)
         self.__instanciar_contenido()
+
+    def __cerrar_ventana(self):
+        self.event.set()  # Indica al hilo que debe finalizar
+        self.loop.call_soon_threadsafe(self.loop.stop)
+        self.destroy()
+        quit()  # Salir de la aplicación
 
 
     def __instanciar_sidebar_izq(self):
@@ -148,7 +165,7 @@ class AversarialGUI(customtkinter.CTk):
         # Configurar el frame de visualización de imagen
         self.img_display_frame = customtkinter.CTkFrame(self.content_frame, corner_radius=20)
         self.img_display_frame.grid(row=1, column=0, padx=20, pady=(0,50), sticky="ew")
-        self.img_display_frame.grid_rowconfigure(1, weight=0)
+        self.img_display_frame.grid_rowconfigure(2, weight=0)
         self.img_display_frame.grid_columnconfigure(1, weight=0)
 
         my_img = customtkinter.CTkImage(light_image=Image.open(str(self.current_image)), size=(350, 350))
@@ -381,7 +398,21 @@ class AversarialGUI(customtkinter.CTk):
                 print(e)
                 messagebox.showerror("Error", "No se ha podido aplicar la defensa de Purificación Adversaria.")        
 
+    def __instanciar_progress_bar(self,label_text : str):
+        self.progress_bar_frame = customtkinter.CTkFrame(self.img_display_frame, corner_radius=5)
+        self.progress_bar_frame.grid(row=2, column=0, padx=20, pady=5)
+        self.progress_bar_frame.columnconfigure(2, weight=1)
 
+        self.progress_bar = customtkinter.CTkProgressBar(self.progress_bar_frame, width=200, height=20,corner_radius=0)
+        self.progress_bar.set(0)
+        self.progress_bar.grid(row=0, column=0, padx=(5,5), pady=5)
+
+        self.progress_bar_label = customtkinter.CTkLabel(self.progress_bar_frame, text=label_text, font=customtkinter.CTkFont(family=self.font_family, size=14, weight="bold"),justify="left")
+        self.progress_bar_label.grid(row=0, column=1, padx=(5,5), pady=5)
+
+    def __run_async_task(self, task):
+        self.loop.run_until_complete(task(self.update_queue))
+        self.event.set()
 
     def __predecir_parche(self):
         target_class = self.patch_target_class.get_selected()
@@ -400,32 +431,52 @@ class AversarialGUI(customtkinter.CTk):
         fig1, _ = generate_prediction_graph(prediccion_real[1])
 
         try:
-            patch = AdversarialPatch(self.current_image, target_class, self.model_loader, self.patch_iterations.getint())
-            asyncio.run(patch.generate_adversarial_patch())
+            iteraciones = int(self.patch_iterations.get())
+            patch = AdversarialPatch(self.current_image, target_class, self.model_loader, iterations=iteraciones)
+
+            self.__instanciar_progress_bar(label_text='Generando parche adversario...')
+
+            self.task_thread = threading.Thread(target=self.__run_async_task, args=(patch.generate_adversarial_patch,),daemon=True)
+            self.task_thread.start()
+
+            self.__check_queue(iteraciones,patch, prediccion_real, fig1)
         except Exception as e:
             print(e)
             messagebox.showerror("Error", f"No se ha podido generar el parche adversario. Vuelve a intentarlo o cambia de clase objetivo.")
+            self.progress_bar_frame.destroy()
             return
-
-        original_img = patch.get_source_image()
-        parche_adversario = patch.get_adversarial_patch()
-        adversarial_image = patch.get_adversarial_image()
-
-        adversarial_prediction = self.model_loader.predict(adversarial_image)
-
-        fig2, _ = generate_prediction_graph(adversarial_prediction[1])
-
-        img_original = self.model_loader.normalize_image(original_img)
         
-        img_perturbacion = self.model_loader.normalize_patch(parche_adversario)
 
-        img_adversaria = self.model_loader.normalize_image(adversarial_image)
+    def __check_queue(self, iterations ,patch, prediccion_real, fig1):
+        try:
+            while True:
+                msg = self.update_queue.get_nowait()
+                if msg == 'done':
+                    self.progress_bar_frame.destroy()
+                    original_img = patch.get_source_image()
+                    parche_adversario = patch.get_adversarial_patch()
+                    adversarial_image = patch.get_adversarial_image()
+                    adversarial_prediction = self.model_loader.predict(adversarial_image)
 
-        self.__mostrarResultadosAdversarios(img_original, img_perturbacion, img_adversaria, prediccion_real, adversarial_prediction, "Imagen original", "Parche adversario", "Imagen adversaria", fig1, fig2)
+                    fig2, _ = generate_prediction_graph(adversarial_prediction[1])
 
+                    img_original = self.model_loader.normalize_image(original_img)
+                    img_perturbacion = self.model_loader.normalize_patch(parche_adversario)
+                    img_adversaria = self.model_loader.normalize_image(adversarial_image)
 
+                    self.__mostrarResultadosAdversarios(img_original, img_perturbacion, img_adversaria, prediccion_real, adversarial_prediction, "Imagen original", "Parche adversario", "Imagen adversaria", fig1, fig2)
+                    break
+                else:
+                    it, text = msg
+                    progress_percent = round(it / iterations,2)
+                    self.progress_bar.set(progress_percent)
+                    print(self.progress_bar.get())
+                    self.progress_bar_label.configure(text=text)
+        except queue.Empty:
+            pass
 
-
+        if not self.event.is_set():
+            self.after(100, self.__check_queue, iterations, patch, prediccion_real, fig1)
 
     def __predecir_normal(self):
         time_start = time()
