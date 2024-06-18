@@ -21,7 +21,7 @@ class Cifar10DenoiserAutoEncoder(DenoiserAutoencoder):
     Implementa la interfaz DenoiserAutoencoder.
     """
 
-    DENOISER_AUTOENCODER_PATH = os.path.abspath(os.path.curdir + "/adversarial-gui/default_models/denoiser_autoencoder.h5")
+    DENOISER_AUTOENCODER_PATH = os.path.abspath(os.path.curdir + "/default_models/denoiser_autoencoder.h5")
     AUTOENCODER_INPUT_SHAPE = [1, 32, 32, 3]
     AUTOENCODER_SIZE = 32
 

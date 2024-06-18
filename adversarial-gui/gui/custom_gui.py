@@ -281,6 +281,9 @@ class AversarialGUI(customtkinter.CTk):
         self.__limpiar_attack_params()
         self.attack = None
         self.sidebar_attack.set("N/A")
+
+        self.defense = None
+        self.sidebar_defense.set("N/A")
         messagebox.showinfo("Información", f"Modelo cambiado a {model}")
 
 
@@ -295,7 +298,7 @@ class AversarialGUI(customtkinter.CTk):
             print(f"El tema '{theme}' no está disponible. Los temas disponibles son: {', '.join(self.TEMAS_DISPONIBLES.keys())}")
    
 
-    def __mostrarResultadosAdversariosPurificados(self, img_original, img_perturbacion, img_adversaria,img_adversaria_purificada, prediccion_real, prediccion_adversaria, prediccion_purificada , desc1, desc2, desc3,descPurificada, fig1, fig2, fig3):
+    def __mostrarResultadosAdversariosPurificados(self, img_original, img_adversaria,img_adversaria_purificada, prediccion_real, prediccion_adversaria, prediccion_purificada , desc1, desc3,descPurificada, fig1, fig2, fig3):
         # Configurar el frame de resultados
         self.__limpiar_contenido()
 
@@ -308,9 +311,6 @@ class AversarialGUI(customtkinter.CTk):
 
         self.real_result = AdversarialResult(self.result_frame, width=100, height=130, image=img_original, descripcion=desc1, prediccion=prediccion_real, step_size=0, grafico=fig1, font_family=self.font_family)
         self.real_result.grid(row=0, column=0, padx=5, pady=15)
-
-        self.perturbacion_result = AdversarialResult(self.result_frame, width=50, height=50, image=img_perturbacion, descripcion=desc2, grafico=None, font_family=self.font_family)
-        self.perturbacion_result.grid(row=1, column=1, padx=5, pady=5)
 
         self.adversarial_result = AdversarialResult(self.result_frame, width=100, height=130, image=img_adversaria,prediccion=prediccion_adversaria, descripcion=desc3, grafico=fig2, font_family=self.font_family)
         self.adversarial_result.grid(row=0, column=1, padx=5, pady=15)
@@ -384,6 +384,7 @@ class AversarialGUI(customtkinter.CTk):
             try:
                 purificador = Cifar10DenoiserAutoEncoder(imagen_adversaria[0])
                 img_adversaria_purificada = purificador.get_purified_image()
+                
                 img_adversaria_purificada_reshape = self.model_loader.reshape_image(img_adversaria_purificada)
                 
                 predictions_purified_image = self.model_loader.predict(img_adversaria_purificada_reshape)
@@ -392,7 +393,7 @@ class AversarialGUI(customtkinter.CTk):
                 # Convert the numpy array to a PIL image
                 pil_image = Image.fromarray((img_adversaria_purificada * 255.0).astype("uint8"))
 
-                self.__mostrarResultadosAdversariosPurificados(img_original, img_perturbacion, img_adversaria, pil_image, prediccion_real, prediccion_adversaria,predictions_purified_image, "Imagen original", "Perturbación", "Imagen adversaria", f'Imagen adversaria purificada', fig1, fig2, fig3)
+                self.__mostrarResultadosAdversariosPurificados(img_original, img_adversaria, pil_image, prediccion_real, prediccion_adversaria,predictions_purified_image, "Imagen original", "Imagen adversaria", f'Imagen adversaria purificada', fig1, fig2, fig3)
 
             except Exception as e:
                 print(e)
