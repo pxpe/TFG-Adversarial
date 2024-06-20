@@ -24,7 +24,7 @@ import tensorflow as tf
 from model_loader.loader import ModelLoader
 from adversarial_attacks.FGSM import FGSMAttack
 from adversarial_attacks.adversarial_patch import AdversarialPatch
-from adversarial_defenses.adversarial_purification.Cifar10DenoiserAutoencoder import Cifar10DenoiserAutoEncoder
+from adversarial_defenses.adversarial_purification.Cifar10DenoisingAutoencoder import Cifar10DenoisingAutoEncoder
 from model_loader.model_utils.model_predictions import generate_prediction_graph
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -382,7 +382,7 @@ class AversarialGUI(customtkinter.CTk):
         
         elif self.defense == "Purificación Adversaria":
             try:
-                purificador = Cifar10DenoiserAutoEncoder(imagen_adversaria[0])
+                purificador = Cifar10DenoisingAutoEncoder(imagen_adversaria[0])
                 img_adversaria_purificada = purificador.get_purified_image()
                 
                 img_adversaria_purificada_reshape = self.model_loader.reshape_image(img_adversaria_purificada)

@@ -7,12 +7,12 @@ import os
 from tensorflow import Tensor
 from typing import List
 
-class DenoiserAutoencoder():
+class DenoisingAutoencoder():
     """
     Interfaz común para todos los denoising autoencoders.
     """
 
-    DENOISER_AUTOENCODER_PATH: str = None  # Ruta del modelo autoencoder
+    DENOISING_AUTOENCODER_PATH: str = None  # Ruta del modelo autoencoder
     AUTOENCODER_INPUT_SHAPE: List[int] = None  # Formato de entrada del autoencoder
     AUTOENCODER_SIZE: int = None  # Tamaño de la imagen de entrada del autoencoder
 
