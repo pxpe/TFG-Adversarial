@@ -58,6 +58,8 @@ class ModelMobileNetV2(ModelInterface):
         return [ModelPrediction(decoded_preds[0][1],str(round(decoded_preds[0][2] * 100,2))) , [ModelPrediction(p[1],str(round(p[2]*100,2))) for p in decoded_preds]]
     
     def preprocess_image(self, image: Tensor) -> Tensor:
+        if image.shape[-1] == 4:
+            image = image[..., :3]  # Elimina el canal alfa si está presente
         return preprocess_input(image)
     
     def normalize_image(self, image: Tensor) -> Image:

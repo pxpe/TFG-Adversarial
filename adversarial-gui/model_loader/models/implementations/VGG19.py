@@ -60,8 +60,10 @@ class ModelVGG19(ModelInterface):
         return [ModelPrediction(decoded_preds[0][1],str(round(decoded_preds[0][2] * 100,2))) , [ModelPrediction(p[1],str(round(p[2]*100,2))) for p in decoded_preds]]
     
     def preprocess_image(self, image: Tensor) -> Tensor:
+        if image.shape[-1] == 4:
+            image = image[..., :3]  # Elimina el canal alfa si está presente
         image = image / 255
-        return (tf.convert_to_tensor(image) - self.MEAN) / self.STD
+        return (tf.convert_to_tensor(image,dtype=tf.float32) - self.MEAN) / self.STD
 
     def normalize_image(self, image: Tensor) -> Image:
         image = image.numpy()

@@ -82,6 +82,8 @@ class ModelAdvTrainedSignalModel(ModelInterface):
         return [result, predictions]
     
     def preprocess_image(self, image: Tensor) -> Tensor:
+        if image.shape[-1] == 4:
+            image = image[..., :3]  # Elimina el canal alfa si está presente
         return imagenet_utils.preprocess_input(
             image, data_format=None, mode="tf"
         )
