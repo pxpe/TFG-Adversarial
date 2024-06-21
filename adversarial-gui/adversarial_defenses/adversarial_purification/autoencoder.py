@@ -2,8 +2,6 @@
 # Fecha: 29/05/2024
 # Descripción: Este script define la clase AdversarialPurification que implementa la defensa Purificación Adversaria en una imagen.
 
-
-import os
 from tensorflow import Tensor
 from typing import List
 

@@ -5,7 +5,6 @@
 
 
 import os
-import numpy as np
 from tensorflow import Tensor
 import tensorflow as tf
 from tensorflow.keras.models import load_model
@@ -13,24 +12,24 @@ import cv2
 
 from image_utils.utilities import divide_image, reconstruct_image
 
-from .autoencoder import DenoiserAutoencoder
+from .autoencoder import DenoisingAutoencoder
 
-class Cifar10DenoisingAutoEncoder(DenoiserAutoencoder):
+class Cifar10DenoisingAutoEncoder(DenoisingAutoencoder):
     """
     Clase que implementa la defensa Purificación Adversaria en una imagen utilizando un Autoencoder entrenado con el dataset CIFAR-10 de imágenes 32x32.
-    Implementa la interfaz DenoiserAutoencoder.
+    Implementa la interfaz DenoisingAutoencoder.
     """
 
     DENOISING_AUTOENCODER_PATH = os.path.abspath(os.path.curdir + "/default_models/denoiser_autoencoder.h5")
     AUTOENCODER_INPUT_SHAPE = [1, 32, 32, 3]
     AUTOENCODER_SIZE = 32
 
-    def __init__(self, noisy_image: tf.Tensor) -> None:
+    def __init__(self, noisy_image: Tensor) -> None:
         super().__init__(noisy_image)
         self.__denoiser = load_model(self.DENOISING_AUTOENCODER_PATH)
         self.purified_image = self._purify()
 
-    def _purify(self) -> tf.Tensor:
+    def _purify(self) -> Tensor:
         """
         Aplica la defensa Purificación Adversaria en una imagen y devuelve la imagen purificada.
 

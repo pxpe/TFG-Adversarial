@@ -3,22 +3,19 @@
 # Descripción: Este script contiene la clase CustomGUI, la cual se encarga de crear la interfaz gráfica de usuario.
 
 import os
-from typing import Union, Literal
 import asyncio
 import threading
 import queue
 from time import time
 
 import customtkinter
-from customtkinter import filedialog, CTkInputDialog
+from customtkinter import filedialog
 from .custom_widgets.ctk_adversarial_result import AdversarialResult
 from .custom_widgets.ctk_scrollable_search import ScrollableSearch
 from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib import pyplot as plt
 
 from PIL import Image
-import numpy as np
 import tensorflow as tf
 
 from model_loader.loader import ModelLoader

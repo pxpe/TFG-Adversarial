@@ -12,7 +12,6 @@ import foolbox as fb
 import os
 from tensorflow import Tensor
 
-from customtkinter import CTkProgressBar, CTkLabel
 import queue
 
 class AdversarialPatch():
